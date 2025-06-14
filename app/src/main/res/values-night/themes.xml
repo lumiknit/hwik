@@ -2,6 +2,6 @@
 <resources>
 
 	<style name="Theme.Hwik" parent="android:Theme.Material.Light.NoActionBar">
-		<item name="android:windowSplashScreenBackground">@color/theme</item>
+		<item name="android:windowSplashScreenBackground">@color/pure_black</item>
 	</style>
 </resources>
