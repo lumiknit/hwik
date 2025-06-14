@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
@@ -47,6 +48,8 @@ import lumiknit.app.hwik.core.TextSpan
 import lumiknit.app.hwik.core.TitleDiv
 import lumiknit.app.hwik.core.VideoDiv
 import lumiknit.app.hwik.core.exampleArticle
+import lumiknit.app.hwik.ui.theme.CustomColorsPalette
+import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 import java.text.DateFormat
 import java.util.Date
 
@@ -69,7 +72,7 @@ private fun convSpanStyle(
 ): SpanStyle {
 	return SpanStyle(
 		fontWeight = if (spanStyle.bold) FontWeight.Bold else FontWeight.Normal,
-		fontStyle = if (spanStyle.italic) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
+		fontStyle = if (spanStyle.italic) FontStyle.Italic else FontStyle.Normal,
 		textDecoration = when {
 			spanStyle.underline -> TextDecoration.Underline
 			spanStyle.strikeThrough -> TextDecoration.LineThrough
@@ -80,6 +83,7 @@ private fun convSpanStyle(
 
 private fun compileSpan(
 	colorScheme: ColorScheme,
+	customPalette: CustomColorsPalette,
 	spans: List<Span>
 ) = buildAnnotatedString {
 	for (span in spans) {
@@ -97,7 +101,7 @@ private fun compileSpan(
 			is LinkSpan -> {
 				withStyle(
 					style = SpanStyle(
-						color = colorScheme.primary,
+						color = customPalette.linkText,
 						textDecoration = TextDecoration.Underline,
 					)
 				) {
@@ -188,16 +192,14 @@ fun DivView(
 
 		is ParagraphDiv -> {
 			val colorScheme = MaterialTheme.colorScheme
-			val annotatedString = remember(div.content) {
-				compileSpan(
-					colorScheme = colorScheme,
-					div.content
-				)
-			}
 
 			Text(
 				modifier = modifier,
-				text = annotatedString,
+				text = compileSpan(
+					colorScheme = colorScheme,
+					customPalette = LocalCustomColorsPalette.current,
+					div.content
+				),
 				color = colorScheme.onSurface,
 			)
 		}

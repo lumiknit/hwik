@@ -11,13 +11,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,8 +29,16 @@ fun TopBar(
 	var moreExpanded by remember { mutableStateOf(false) }
 	var context = LocalContext.current
 
+	var colors = TopAppBarColors(
+		containerColor = LocalCustomColorsPalette.current.appBarBackground,
+		scrolledContainerColor = LocalCustomColorsPalette.current.appBarBackground,
+		navigationIconContentColor = LocalCustomColorsPalette.current.onAppBarBackground,
+		titleContentColor = LocalCustomColorsPalette.current.onAppBarBackground,
+		actionIconContentColor = LocalCustomColorsPalette.current.onAppBarBackground,
+	)
+
 	TopAppBar(
-		colors = TopAppBarDefaults.topAppBarColors(),
+		colors = colors,
 		title = { Text(text = title) },
 		navigationIcon = {
 			if (!showBack) return@TopAppBar

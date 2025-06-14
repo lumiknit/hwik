@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import lumiknit.app.hwik.compview.MainView
 import lumiknit.app.hwik.ui.theme.HwikTheme
+import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +23,10 @@ class MainActivity : ComponentActivity() {
 					topBar = {
 						TopBar(title = "Main")
 					},
-					modifier = Modifier.fillMaxSize()
+					modifier = Modifier
+						.fillMaxSize(),
+					containerColor = LocalCustomColorsPalette.current.background,
+					contentColor = LocalCustomColorsPalette.current.onBackground,
 				) { innerPadding ->
 					Box(modifier = Modifier.padding(innerPadding)) {
 						MainView()
