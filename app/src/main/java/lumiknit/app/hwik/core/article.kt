@@ -1,7 +1,8 @@
 package lumiknit.app.hwik.core
 
+import kotlinx.datetime.Instant
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import java.util.Date
 
 interface Div {}
 
@@ -95,7 +96,8 @@ data class CodeSpan(
 data class ArticleMeta(
 	var title: String,
 	var author: String? = null,
-	var date: Date? = null,
+	@Contextual()
+	var date: Instant? = null,
 	var description: String? = null,
 ) {
 	override fun toString(): String {

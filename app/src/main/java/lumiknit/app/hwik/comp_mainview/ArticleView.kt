@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.compview
+package lumiknit.app.hwik.comp_mainview
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
@@ -37,6 +37,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
+import kotlinx.datetime.Instant
 import lumiknit.app.hwik.core.Article
 import lumiknit.app.hwik.core.ArticleMeta
 import lumiknit.app.hwik.core.Div
@@ -210,9 +211,9 @@ fun DivView(
 	}
 }
 
-fun Date.asTimeOrRecentDate(): String =
+fun Instant.asTimeOrRecentDate(): String =
 	DateUtils.formatSameDayTime(
-		time,
+		this.toEpochMilliseconds(),
 		Date().time,
 		DateFormat.LONG,
 		DateFormat.SHORT

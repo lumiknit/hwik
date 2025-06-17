@@ -27,7 +27,7 @@ val OnDarkCustomColorsPalette = CustomColorsPalette(
 	onAppBarBackground = Color(color = 0xFFFFFFFF),
 	background = Color(0xFF000000),
 	onBackground = Color(0xFFF8F8F8),
-	linkText = Color(0xFFFFBB68),
+	linkText = Color(0xFFFF9233),
 )
 
 val LocalCustomColorsPalette = staticCompositionLocalOf { CustomColorsPalette() }

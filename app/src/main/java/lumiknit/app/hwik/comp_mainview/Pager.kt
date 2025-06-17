@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.compview
+package lumiknit.app.hwik.comp_mainview
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding

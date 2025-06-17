@@ -1,13 +1,13 @@
 package lumiknit.app.hwik.core
 
-import java.text.SimpleDateFormat
+import kotlinx.datetime.Instant
 
 fun exampleArticle(): Article {
 	return Article(
 		meta = ArticleMeta(
 			title = "Example Article Good Wow amazing",
 			author = "Author Name",
-			date = SimpleDateFormat("yyyy-MM-dd").parse("2023-05-15"),
+			date = Instant.parse("2023-10-01T12:00:00Z"),
 		),
 		content = listOf<Div>(
 			TitleDiv(text = "Introduction", level = 1),

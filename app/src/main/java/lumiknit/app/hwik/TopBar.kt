@@ -1,6 +1,5 @@
 package lumiknit.app.hwik
 
-import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.MoreVert
@@ -20,11 +19,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
+data class MenuItem(
+	val title: String,
+	val icon: (@Composable () -> Unit)? = null,
+	val onClick: () -> Unit,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
 	title: String,
-	showBack: Boolean = false,
+	menuItems: List<MenuItem>? = null,
+	onBack: (() -> Unit)? = null,
 ) {
 	var moreExpanded by remember { mutableStateOf(false) }
 	var context = LocalContext.current
@@ -41,12 +47,8 @@ fun TopBar(
 		colors = colors,
 		title = { Text(text = title) },
 		navigationIcon = {
-			if (!showBack) return@TopAppBar
-			IconButton(onClick = {
-				// Handle back navigation
-				val activity = context as? androidx.activity.ComponentActivity
-				activity?.onBackPressedDispatcher?.onBackPressed()
-			}) {
+			if (onBack == null) return@TopAppBar
+			IconButton(onClick = onBack) {
 				Icon(
 					imageVector = Icons.AutoMirrored.Filled.ArrowBack,
 					contentDescription = "Localized description"
@@ -54,6 +56,8 @@ fun TopBar(
 			}
 		},
 		actions = {
+			if (menuItems == null) return@TopAppBar
+
 			IconButton(onClick = {
 				moreExpanded = true
 			}) {
@@ -66,12 +70,16 @@ fun TopBar(
 				expanded = moreExpanded,
 				onDismissRequest = { moreExpanded = false }
 			) {
-				DropdownMenuItem(
-					text = { Text("Settings") },
-					onClick = {
-						Toast.makeText(context, "Settings", Toast.LENGTH_SHORT).show()
-					}
-				)
+				for (item in menuItems) {
+					DropdownMenuItem(
+						text = { Text(item.title) },
+						leadingIcon = item.icon,
+						onClick = {
+							item.onClick()
+							moreExpanded = false
+						}
+					)
+				}
 			}
 		},
 	)
