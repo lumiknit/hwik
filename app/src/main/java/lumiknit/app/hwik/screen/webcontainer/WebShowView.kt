@@ -1,5 +1,6 @@
-package lumiknit.app.hwik.comp_webview
+package lumiknit.app.hwik.screen.webcontainer
 
+import android.util.Log
 import android.view.KeyEvent
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -21,7 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
-import lumiknit.app.hwik.TopBar
+import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -33,13 +35,17 @@ fun WebShowView(
 	val url = remember { mutableStateOf("") }
 
 	DisposableEffect(Unit) {
+		Log.i("WebShowView", "WebShowView Mounted")
+
 		var wvCallbacks = object : WebControlCallbacks() {
 			override fun onURLChanged(newUrl: String) {
 				url.value = newUrl
 			}
 		}
 		WebController.addCallback(wvCallbacks)
+
 		onDispose {
+			Log.i("WebShowView", "WebShowView Disposed")
 			WebController.removeCallback(wvCallbacks)
 		}
 	}
@@ -104,7 +110,7 @@ fun WebShowView(
 							}
 							false
 						}),
-					label = { androidx.compose.material3.Text("URL") },
+					label = { Text("URL") },
 					maxLines = 1,
 					singleLine = true,
 					keyboardActions = KeyboardActions(

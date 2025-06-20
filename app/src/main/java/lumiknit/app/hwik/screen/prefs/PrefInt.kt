@@ -1,10 +1,11 @@
-package lumiknit.app.hwik.comp_prefs
+package lumiknit.app.hwik.screen.prefs
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.datastore.preferences.core.Preferences
 
 /** PrefInt is a component which edit an integer preference. */
@@ -27,7 +28,7 @@ fun PrefInt(
 			label = { Text(text = "Enter value") },
 			singleLine = true,
 			keyboardOptions = KeyboardOptions.Default.copy(
-				keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+				keyboardType = KeyboardType.Number
 			)
 		)
 	}

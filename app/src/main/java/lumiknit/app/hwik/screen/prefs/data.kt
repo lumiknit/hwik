@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.comp_prefs
+package lumiknit.app.hwik.screen.prefs
 
 import android.content.Context
 import androidx.datastore.core.DataStore

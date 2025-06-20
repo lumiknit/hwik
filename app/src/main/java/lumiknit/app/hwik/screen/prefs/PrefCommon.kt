@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.comp_prefs
+package lumiknit.app.hwik.screen.prefs
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

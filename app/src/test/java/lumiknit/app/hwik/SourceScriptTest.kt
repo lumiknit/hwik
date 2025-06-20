@@ -1,10 +1,10 @@
 package lumiknit.app.hwik
 
-import lumiknit.app.hwik.sourcescript.CondPageReady
-import lumiknit.app.hwik.sourcescript.CondWait
-import lumiknit.app.hwik.sourcescript.Meta
-import lumiknit.app.hwik.sourcescript.SourceScript
-import lumiknit.app.hwik.sourcescript.Step
+import lumiknit.app.hwik.core.CondPageReady
+import lumiknit.app.hwik.core.CondWait
+import lumiknit.app.hwik.core.Meta
+import lumiknit.app.hwik.core.SourceScript
+import lumiknit.app.hwik.core.Step
 import org.junit.Test
 
 class SourceScriptTest {

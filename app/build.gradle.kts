@@ -4,6 +4,8 @@ plugins {
 	alias(libs.plugins.kotlin.compose)
 
 	kotlin("plugin.serialization") version "2.1.20"
+
+	id("com.google.devtools.ksp") version "2.0.21-1.0.27"
 }
 
 android {
@@ -58,23 +60,30 @@ dependencies {
 	debugImplementation(libs.androidx.ui.tooling)
 	debugImplementation(libs.androidx.ui.test.manifest)
 
-	implementation("com.google.guava:guava:31.0.1-android")
+	implementation(libs.guava)
 
-	implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
-	implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
-	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.0")
+	implementation(libs.kotlin.stdlib)
+	implementation(libs.kotlinx.datetime)
+	implementation(libs.kotlinx.serialization.json)
+	implementation(libs.kotlinx.coroutines.guava)
 
-	implementation("androidx.datastore:datastore-preferences:1.1.7")
+	implementation(libs.androidx.datastore.preferences)
+	implementation(libs.androidx.navigation.compose)
 
-	implementation("com.squareup.okhttp3:okhttp:4.12.0")
+	implementation(libs.okhttp)
 
-	implementation("io.coil-kt.coil3:coil-compose:3.2.0")
-	implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
+	implementation(libs.coil.compose)
+	implementation(libs.coil.network.okhttp)
 
-	implementation("androidx.media3:media3-exoplayer:1.7.1")
-	implementation("androidx.media3:media3-ui:1.7.1")
-	implementation("androidx.media3:media3-common:1.7.1")
+	implementation(libs.androidx.media3.exoplayer)
+	implementation(libs.androidx.media3.ui)
+	implementation(libs.androidx.media3.common)
 
-	implementation("androidx.javascriptengine:javascriptengine:1.0.0-rc01")
+	implementation(libs.androidx.javascriptengine)
+
+	implementation(libs.androidx.room.runtime)
+	annotationProcessor(libs.androidx.room.compiler)
+	implementation(libs.androidx.room.ktx)
+	implementation(libs.androidx.room.guava)
+	ksp(libs.androidx.room.compiler)
 }

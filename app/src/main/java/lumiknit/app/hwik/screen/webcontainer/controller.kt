@@ -1,8 +1,8 @@
-package lumiknit.app.hwik.comp_webview
+package lumiknit.app.hwik.screen.webcontainer
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
-import lumiknit.app.hwik.sourcescript.Step
+import lumiknit.app.hwik.core.Step
 
 enum class WebTaskType {
 	GET_URL,

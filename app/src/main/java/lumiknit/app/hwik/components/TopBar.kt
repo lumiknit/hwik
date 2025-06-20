@@ -1,4 +1,4 @@
-package lumiknit.app.hwik
+package lumiknit.app.hwik.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack

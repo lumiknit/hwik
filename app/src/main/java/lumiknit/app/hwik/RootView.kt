@@ -1,6 +1,10 @@
 package lumiknit.app.hwik
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,32 +12,101 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
-import lumiknit.app.hwik.comp_mainview.MainView
-import lumiknit.app.hwik.comp_prefs.PreferencesView
-import lumiknit.app.hwik.comp_sources.SourceListView
-import lumiknit.app.hwik.comp_webview.WebShowView
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import lumiknit.app.hwik.components.modal.ConfirmModal
+import lumiknit.app.hwik.screen.main.MainScreen
+import lumiknit.app.hwik.screen.prefs.PreferencesView
+import lumiknit.app.hwik.screen.sources.SourceListScreen
+import lumiknit.app.hwik.screen.webcontainer.WebShowView
+import lumiknit.app.hwik.state.GlobalStore
+
+// Routes
 
 @Composable
 fun RootView() {
-	var showSources by remember { mutableStateOf(false) }
-	var showPreferences by remember { mutableStateOf(false) }
+	val navController = rememberNavController()
+
 	var showWebView by remember { mutableStateOf(false) }
 
-	Box {
-		MainView(
-			onOpenSources = {
-				showSources = true
-			},
-			onOpenWebView = {
-				showWebView = true
-			},
-			onOpenPrefs = {
-				showPreferences = true
+	var navCallbacks = object : NavCallbacks() {
+		override fun onRouteMain() {
+			navController.navigate(RouteMain) {
+				// Clear the back stack to prevent going back to the previous screen
+				popUpTo(RouteMain) { inclusive = true }
 			}
-		)
+		}
 
-		// WebShowView should not be unmounted when it is not visible
-		// because webview should be running in the background
+		override fun onRouteWebShowView() {
+			showWebView = true
+		}
+
+		override fun onRouteSourceList() {
+			navController.navigate(RouteSourceList)
+		}
+
+		override fun onRoutePreferences() {
+			navController.navigate(RoutePreferences)
+		}
+
+		override fun onBack() {
+			navController.navigateUp()
+		}
+	}
+
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(
+				color = MaterialTheme.colorScheme.background
+			)
+	) {
+		NavHost(
+			navController = navController,
+			startDestination = RouteMain,
+			enterTransition = {
+				// Slide into
+				slideIntoContainer(
+					AnimatedContentTransitionScope.SlideDirection.Left,
+				)
+			},
+			exitTransition = {
+				// Slide out
+				slideOutOfContainer(
+					AnimatedContentTransitionScope.SlideDirection.Left,
+				)
+			},
+			popEnterTransition = {
+				// Slide into
+				slideIntoContainer(
+					AnimatedContentTransitionScope.SlideDirection.Right,
+				)
+			},
+			popExitTransition = {
+				// Slide out
+				slideOutOfContainer(
+					AnimatedContentTransitionScope.SlideDirection.Right,
+				)
+			}
+		) {
+			composable<RouteMain> {
+				MainScreen(
+					navCallbacks = navCallbacks,
+				)
+			}
+			composable<RouteSourceList> {
+				SourceListScreen(
+					navCallbacks = navCallbacks,
+				)
+			}
+			composable<RoutePreferences> {
+				PreferencesView(
+					navCallbacks = navCallbacks,
+				)
+			}
+		}
+
 		WebShowView(
 			modifier = Modifier.zIndex(
 				if (showWebView) 1f else -1f
@@ -41,20 +114,12 @@ fun RootView() {
 			url = "https://www.naver.com",
 			onClose = {
 				showWebView = false
-			}
-		)
+			})
 
-		if (showSources) {
-			SourceListView(
-				onClose = {
-					showSources = false
-				}
-			)
-		}
-
-		if (showPreferences) {
-			PreferencesView(
-				onClose = { showPreferences = false }
+		val cmc = GlobalStore.confirmModalCallback.value
+		if (cmc != null) {
+			ConfirmModal(
+				props = cmc
 			)
 		}
 	}

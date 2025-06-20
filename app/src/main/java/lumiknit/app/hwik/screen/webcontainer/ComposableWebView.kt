@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.comp_webview
+package lumiknit.app.hwik.screen.webcontainer
 
 import android.util.Log
 import android.view.ViewGroup
@@ -17,7 +17,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 
 class CustomWebViewClient : WebViewClient() {
-	override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+	override fun doUpdateVisitedHistory(
+		view: WebView?,
+		url: String?,
+		isReload: Boolean
+	) {
 		super.doUpdateVisitedHistory(view, url, isReload)
 
 		Log.d("CustomWebViewClient", "Visited URL: $url")
@@ -48,7 +52,8 @@ fun ComposableWebView(
 				when (t.type) {
 					WebTaskType.NAV_BACK -> {
 						if (!wv.canGoBack()) {
-							Toast.makeText(context, "No back history", Toast.LENGTH_SHORT).show()
+							Toast.makeText(context, "No back history", Toast.LENGTH_SHORT)
+								.show()
 							return@let
 						}
 						wv.goBack()
@@ -56,7 +61,8 @@ fun ComposableWebView(
 
 					WebTaskType.NAV_FORWARD -> {
 						if (!wv.canGoForward()) {
-							Toast.makeText(context, "No forward history", Toast.LENGTH_SHORT).show()
+							Toast.makeText(context, "No forward history", Toast.LENGTH_SHORT)
+								.show()
 							return@let
 						}
 						wv.goForward()
@@ -64,7 +70,8 @@ fun ComposableWebView(
 
 					WebTaskType.NAV_TO -> {
 						if (t.data.isNullOrEmpty()) {
-							Toast.makeText(context, "No URL provided", Toast.LENGTH_SHORT).show()
+							Toast.makeText(context, "No URL provided", Toast.LENGTH_SHORT)
+								.show()
 							return@let
 						}
 						wv.loadUrl(t.data)
@@ -72,7 +79,11 @@ fun ComposableWebView(
 
 					else -> {
 						Log.e("ComposableWebView", "Unknown task type: ${t.type}")
-						Toast.makeText(context, "Unknown task type: ${t.type}", Toast.LENGTH_SHORT).show()
+						Toast.makeText(
+							context,
+							"Unknown task type: ${t.type}",
+							Toast.LENGTH_SHORT
+						).show()
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.sourcescript
+package lumiknit.app.hwik.core
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
