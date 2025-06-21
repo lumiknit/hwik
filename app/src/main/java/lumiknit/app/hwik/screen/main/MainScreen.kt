@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.unit.dp
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
@@ -63,7 +65,12 @@ fun MainScreen(
 			)
 
 			FloatingButton(
-				modifier = Modifier.align(Alignment.BottomCenter),
+				modifier = Modifier
+					.align(Alignment.BottomCenter)
+					.shadow(
+						elevation = 8.dp,
+					),
+				dropdownModifier = Modifier.align(Alignment.BottomEnd),
 				state = state,
 			)
 		}

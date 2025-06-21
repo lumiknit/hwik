@@ -2,13 +2,14 @@ package lumiknit.app.hwik.screen.webcontainer
 
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
-import lumiknit.app.hwik.core.Step
+import lumiknit.app.hwik.core.PickerStep
 
 enum class WebTaskType {
 	GET_URL,
 	NAV_BACK,
 	NAV_FORWARD,
 	NAV_TO,
+	REFRESH,
 	EVAL_JS,
 }
 
@@ -82,7 +83,7 @@ object WebController {
 	}
 
 	suspend fun runScriptSteps(
-		ss: List<Step>
+		ss: List<PickerStep>
 	) {
 	}
 }

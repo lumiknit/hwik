@@ -15,9 +15,11 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import lumiknit.app.hwik.components.modal.ConfirmModal
 import lumiknit.app.hwik.screen.main.MainScreen
 import lumiknit.app.hwik.screen.prefs.PreferencesView
+import lumiknit.app.hwik.screen.sources.SourceEditScreen
 import lumiknit.app.hwik.screen.sources.SourceListScreen
 import lumiknit.app.hwik.screen.webcontainer.WebShowView
 import lumiknit.app.hwik.state.GlobalStore
@@ -44,6 +46,10 @@ fun RootView() {
 
 		override fun onRouteSourceList() {
 			navController.navigate(RouteSourceList)
+		}
+
+		override fun onRouteSourceEdit(sourceID: String?) {
+			navController.navigate(RouteSourceEdit(sourceID))
 		}
 
 		override fun onRoutePreferences() {
@@ -98,6 +104,13 @@ fun RootView() {
 			composable<RouteSourceList> {
 				SourceListScreen(
 					navCallbacks = navCallbacks,
+				)
+			}
+			composable<RouteSourceEdit> { v ->
+				val e: RouteSourceEdit = v.toRoute()
+				SourceEditScreen(
+					navCallbacks = navCallbacks,
+					sourceID = e.sourceID,
 				)
 			}
 			composable<RoutePreferences> {

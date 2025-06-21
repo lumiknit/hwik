@@ -3,14 +3,14 @@ package lumiknit.app.hwik
 import lumiknit.app.hwik.core.CondPageReady
 import lumiknit.app.hwik.core.CondWait
 import lumiknit.app.hwik.core.Meta
-import lumiknit.app.hwik.core.SourceScript
-import lumiknit.app.hwik.core.Step
+import lumiknit.app.hwik.core.PickerScript
+import lumiknit.app.hwik.core.PickerStep
 import org.junit.Test
 
 class SourceScriptTest {
 	@Test
 	fun testJSON() {
-		val ss = SourceScript(
+		val ss = PickerScript(
 			id = "test",
 			meta = Meta(
 				name = "Test Script",
@@ -18,12 +18,12 @@ class SourceScriptTest {
 				author = "Author Name",
 				version = "2025.0601.1",
 			),
-			entryList = mutableListOf(
-				Step(
+			articleList = mutableListOf(
+				PickerStep(
 					condList = mutableListOf(),
 					code = "console.log('Hello, World!')"
 				),
-				Step(
+				PickerStep(
 					condList = mutableListOf(
 						CondWait(seconds = 1.5),
 						CondPageReady(),

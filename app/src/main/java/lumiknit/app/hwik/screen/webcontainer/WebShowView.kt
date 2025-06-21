@@ -12,18 +12,22 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
 import lumiknit.app.hwik.components.TopBar
+import lumiknit.app.hwik.core.sanitizeFetchURL
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -32,14 +36,14 @@ fun WebShowView(
 	url: String,
 	onClose: (() -> Unit)? = null,
 ) {
-	val url = remember { mutableStateOf("") }
+	var url by remember { mutableStateOf("") }
 
 	DisposableEffect(Unit) {
 		Log.i("WebShowView", "WebShowView Mounted")
 
 		var wvCallbacks = object : WebControlCallbacks() {
 			override fun onURLChanged(newUrl: String) {
-				url.value = newUrl
+				url = newUrl
 			}
 		}
 		WebController.addCallback(wvCallbacks)
@@ -70,7 +74,20 @@ fun WebShowView(
 				.padding(innerPadding)
 		) {
 			Row {
-				Button(
+				IconButton(
+					onClick = {
+						WebController.go(
+							WebTaskType.REFRESH
+						)
+					}
+				) {
+					Icon(
+						modifier = Modifier,
+						imageVector = Icons.Default.Refresh,
+						contentDescription = "Refresh",
+					)
+				}
+				IconButton(
 					onClick = {
 						WebController.go(
 							WebTaskType.NAV_BACK
@@ -83,19 +100,23 @@ fun WebShowView(
 						contentDescription = "Back",
 					)
 				}
-				Button(
-					onClick = {}
+				IconButton(
+					onClick = {
+						WebController.go(
+							WebTaskType.NAV_FORWARD
+						)
+					}
 				) {
 					Icon(
 						modifier = Modifier,
 						imageVector = Icons.AutoMirrored.Default.ArrowForward,
-						contentDescription = "Back",
+						contentDescription = "Forwards",
 					)
 				}
 				TextField(
-					value = url.value,
+					value = url,
 					onValueChange = { newUrl ->
-						url.value = newUrl
+						url = newUrl
 					},
 					modifier = Modifier
 						.weight(1f)
@@ -104,7 +125,7 @@ fun WebShowView(
 							if (ev.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
 								WebController.go(
 									WebTaskType.NAV_TO,
-									url.value
+									sanitizeFetchURL(url)
 								)
 								return@onKeyEvent true
 							}
@@ -117,7 +138,7 @@ fun WebShowView(
 						onDone = {
 							WebController.go(
 								WebTaskType.NAV_TO,
-								url.value
+								sanitizeFetchURL(url)
 							)
 						}
 					),

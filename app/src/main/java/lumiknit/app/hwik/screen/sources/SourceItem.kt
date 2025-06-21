@@ -19,15 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import lumiknit.app.hwik.core.SSItemEntity
-import lumiknit.app.hwik.core.SSOriginEntity
+import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.state.GlobalStore
 import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
 import lumiknit.app.hwik.ui.theme.listItemTitleTextStyle
 
 @Composable
-fun SSOriginItem(
-	entity: SSOriginEntity,
+fun PSSourceItem(
+	entity: PSSourceEntity,
 	onClick: () -> Unit,
 	onDelete: () -> Unit,
 ) {
@@ -55,23 +54,12 @@ fun SSOriginItem(
 				.weight(1f)
 				.clickable(onClick = onClick)
 		) {
-			if (entity.url == null) {
-				// Local source
-				val title = (entity.src ?: "No source").trim()
-				Text(
-					title.split('\n', limit = 2).firstOrNull()
-						?: "Unnamed(${entity.id})",
-					style = listItemTitleTextStyle
-				)
-			} else {
-				// Remote source
-				Text(
-					entity.url,
-					style = listItemTitleTextStyle,
-				)
-			}
 			Text(
-				"ID: ${entity.id}",
+				entity.id,
+				style = listItemTitleTextStyle
+			)
+			Text(
+				entity.url ?: "No URL",
 				style = listItemDescTextStyle
 			)
 			Text(
@@ -94,35 +82,6 @@ fun SSOriginItem(
 			},
 		) {
 			Icon(Icons.Default.Delete, contentDescription = "Delete Source")
-		}
-	}
-}
-
-@Composable
-fun SSItem(
-	entity: SSItemEntity,
-	origin: SSOriginEntity?,
-	onClick: () -> Unit,
-) {
-	Row(
-		modifier = Modifier.padding(
-			horizontal = 8.dp,
-			vertical = 4.dp
-		)
-	) {
-		Column(
-			modifier = Modifier
-				.weight(1f)
-				.clickable(onClick = onClick)
-		) {
-			Text(
-				entity.id,
-				style = listItemTitleTextStyle
-			)
-			Text(
-				"origin",
-				style = listItemDescTextStyle
-			)
 		}
 	}
 }

@@ -2,6 +2,7 @@ package lumiknit.app.hwik.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -31,6 +32,7 @@ fun TopBar(
 	title: String,
 	menuItems: List<MenuItem>? = null,
 	onBack: (() -> Unit)? = null,
+	onDone: (() -> Unit)? = null,
 ) {
 	var moreExpanded by remember { mutableStateOf(false) }
 	var context = LocalContext.current
@@ -56,28 +58,36 @@ fun TopBar(
 			}
 		},
 		actions = {
-			if (menuItems == null) return@TopAppBar
-
-			IconButton(onClick = {
-				moreExpanded = true
-			}) {
-				Icon(
-					imageVector = Icons.Outlined.MoreVert,
-					contentDescription = "Localized description"
-				)
+			if (menuItems != null) {
+				IconButton(onClick = {
+					moreExpanded = true
+				}) {
+					Icon(
+						imageVector = Icons.Outlined.MoreVert,
+						contentDescription = "Localized description"
+					)
+				}
+				DropdownMenu(
+					expanded = moreExpanded,
+					onDismissRequest = { moreExpanded = false }
+				) {
+					for (item in menuItems) {
+						DropdownMenuItem(
+							text = { Text(item.title) },
+							leadingIcon = item.icon,
+							onClick = {
+								item.onClick()
+								moreExpanded = false
+							}
+						)
+					}
+				}
 			}
-			DropdownMenu(
-				expanded = moreExpanded,
-				onDismissRequest = { moreExpanded = false }
-			) {
-				for (item in menuItems) {
-					DropdownMenuItem(
-						text = { Text(item.title) },
-						leadingIcon = item.icon,
-						onClick = {
-							item.onClick()
-							moreExpanded = false
-						}
+			if (onDone != null) {
+				IconButton(onClick = onDone) {
+					Icon(
+						imageVector = Icons.Default.Check,
+						contentDescription = "Done"
 					)
 				}
 			}

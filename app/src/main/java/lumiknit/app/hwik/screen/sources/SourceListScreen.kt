@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,9 +25,9 @@ import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
-import lumiknit.app.hwik.core.SSItemEntity
-import lumiknit.app.hwik.core.SSOriginEntity
-import lumiknit.app.hwik.core.SourceScriptDatabase
+import lumiknit.app.hwik.core.PSDatabase
+import lumiknit.app.hwik.core.PSSourceEntity
+import lumiknit.app.hwik.core.PickerScript
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -33,31 +36,32 @@ fun SourceListScreen(
 ) {
 	val context = LocalContext.current
 	val coroutineScope = rememberCoroutineScope()
-	var db = SourceScriptDatabase.getDatabase(context)
+	var db = PSDatabase.getDatabase(context)
 
-	var sourceOrigins by remember { mutableStateOf<List<SSOriginEntity>>(listOf()) }
-	var sourceItems by remember { mutableStateOf<List<SSItemEntity>>(listOf()) }
+	var sources by remember { mutableStateOf<List<PSSourceEntity>>(listOf()) }
 
 	var loadFromDB = suspend {
-		sourceOrigins = db.ssOriginDao().getAll()
-		sourceItems = db.ssScriptDao().getAll()
+		sources = db.psScriptDao().getAll()
 	}
 
 	val addRandOrigin = {
 		coroutineScope.launch {
-			val newOrigin = SSOriginEntity(
+			val newOrigin = PSSourceEntity(
 				lastFetched = Clock.System.now(),
-				url = "Hello akjsdklajsldkjaskldjalksjdlaksjdklasjdklajslkdjaksldjaklsdjalksjdlaksjdlk"
+				url = "Hello akjsdklajsldkjaskldjalksjdlaksjdklasjdklajslkdjaksldjaklsdjalksjdlaksjdlk",
+				rawScript = "aksld",
+				script = PickerScript(
+				)
 			)
-			db.ssOriginDao().insert(newOrigin)
+			db.psScriptDao().insert(newOrigin)
 			loadFromDB()
 		}
 		Unit
 	}
 
-	val deleteOrigin = { origin: SSOriginEntity ->
+	val deleteOrigin = { origin: PSSourceEntity ->
 		coroutineScope.launch {
-			db.ssOriginDao().deleteById(origin.id)
+			db.psScriptDao().deleteById(origin.id)
 			loadFromDB()
 		}
 	}
@@ -72,7 +76,7 @@ fun SourceListScreen(
 					navCallbacks.onBack()
 				},
 				menuItems = listOf(
-					MenuItem(title = "Sources", onClick = {
+					MenuItem(title = "Refresh All", onClick = {
 					}),
 				)
 			)
@@ -87,48 +91,29 @@ fun SourceListScreen(
 				.fillMaxSize()
 				.padding(innerPadding)
 		) {
-			ListSectionTitle("Script Origins (${sourceOrigins.size})")
+			ListSectionTitle("Script Sources (${sources.size})")
 
 			Row {
 				// Add button
 				Button(
-					onClick = addRandOrigin
-				) {
-					Text(text = "From URL")
-				}
-
-				Button(
-					onClick = {}
-				) {
-					Text(text = "From JSON")
-				}
-			}
-
-			for (origin in sourceOrigins) {
-				SSOriginItem(
-					entity = origin,
-					onClick = {},
-					onDelete = {
-						deleteOrigin(origin)
+					onClick = {
+						navCallbacks.onRouteSourceEdit(null) // Navigate to add source screen
 					}
-				)
-			}
-
-			ListSectionTitle("Sources (${sourceItems.size})")
-			Row {
-				// Add button
-				Button(
-					onClick = addRandOrigin
 				) {
-					Text(text = "Reload All")
+					Icon(Icons.Default.Add, contentDescription = "Add Source")
+					Text(text = "Add Source")
 				}
 			}
 
-			for (item in sourceItems) {
-				SSItem(
-					entity = item,
-					origin = sourceOrigins.firstOrNull { it.id == item.originID },
-					onClick = {}
+			for (src in sources) {
+				PSSourceItem(
+					entity = src,
+					onClick = {
+						navCallbacks.onRouteSourceEdit(src.id) // Navigate to edit source screen
+					},
+					onDelete = {
+						deleteOrigin(src)
+					}
 				)
 			}
 		}

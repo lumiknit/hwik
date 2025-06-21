@@ -77,6 +77,10 @@ fun ComposableWebView(
 						wv.loadUrl(t.data)
 					}
 
+					WebTaskType.REFRESH -> {
+						wv.reload()
+					}
+
 					else -> {
 						Log.e("ComposableWebView", "Unknown task type: ${t.type}")
 						Toast.makeText(
