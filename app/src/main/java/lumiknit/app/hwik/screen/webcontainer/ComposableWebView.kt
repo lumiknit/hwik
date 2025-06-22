@@ -2,6 +2,7 @@ package lumiknit.app.hwik.screen.webcontainer
 
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -26,6 +27,16 @@ class CustomWebViewClient : WebViewClient() {
 
 		Log.d("CustomWebViewClient", "Visited URL: $url")
 		WebControlProvider.onURLChanged(url)
+	}
+
+	override fun shouldOverrideUrlLoading(
+		view: WebView,
+		request: WebResourceRequest?
+	): Boolean {
+		view.loadUrl(request?.url.toString())
+		Log.d("CustomWebViewClient", "Loading URL: ${request?.url}")
+		WebControlProvider.onURLChanged(request?.url.toString())
+		return true // Return true to indicate that we handled the URL loading
 	}
 }
 
@@ -57,6 +68,7 @@ fun ComposableWebView(
 							return@let
 						}
 						wv.goBack()
+						t.callback?.invoke("OK", null)
 					}
 
 					WebTaskType.NAV_FORWARD -> {
@@ -66,6 +78,7 @@ fun ComposableWebView(
 							return@let
 						}
 						wv.goForward()
+						t.callback?.invoke("OK", null)
 					}
 
 					WebTaskType.NAV_TO -> {
@@ -75,10 +88,35 @@ fun ComposableWebView(
 							return@let
 						}
 						wv.loadUrl(t.data)
+						t.callback?.invoke("OK", null)
 					}
 
 					WebTaskType.REFRESH -> {
 						wv.reload()
+						t.callback?.invoke("OK", null)
+					}
+
+					WebTaskType.EVAL_JS -> {
+						if (t.data.isNullOrEmpty()) {
+							Toast.makeText(
+								context,
+								"No JavaScript code provided",
+								Toast.LENGTH_SHORT
+							)
+								.show()
+							return@let
+						}
+						Log.d("ComposableWebView", "Evaluating JavaScript: ${t.data}")
+						wv.evaluateJavascript(t.data) { result ->
+							Log.d("ComposableWebView", "JavaScript result: $result")
+							t.callback?.invoke(result ?: "", null)
+						}
+					}
+
+					WebTaskType.GET_URL -> {
+						val currentUrl = wv.url ?: ""
+						t.callback?.invoke(currentUrl, null)
+						WebControlProvider.onURLChanged(currentUrl)
 					}
 
 					else -> {

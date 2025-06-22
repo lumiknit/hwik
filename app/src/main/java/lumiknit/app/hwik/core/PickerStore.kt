@@ -44,13 +44,15 @@ class PickerScriptConverter {
 	tableName = "PSSourceEntity"
 )
 data class PSSourceEntity(
-	@PrimaryKey
-	val id: String = "",
+	@PrimaryKey(autoGenerate = true)
+	val id: Long = 0,
 
 	// If fetched from URL, this will be the URL.
 	val url: String? = null,
 
 	val lastFetched: Instant,
+
+	val enabled: Boolean = true,
 
 	val rawScript: String,
 
@@ -66,13 +68,13 @@ interface SSItemDao {
 	suspend fun getAll(): List<PSSourceEntity>
 
 	@Query("SELECT * FROM PSSourceEntity WHERE id = :id")
-	suspend fun getById(id: String): PSSourceEntity?
+	suspend fun getById(id: Long): PSSourceEntity?
 
 	@Update
 	suspend fun update(script: PSSourceEntity)
 
 	@Query("DELETE FROM PSSourceEntity WHERE id = :id")
-	suspend fun deleteById(id: String)
+	suspend fun deleteById(id: Long)
 }
 
 

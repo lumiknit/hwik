@@ -146,7 +146,7 @@ fun WebShowView(
 			}
 			ComposableWebView(
 				modifier = Modifier.fillMaxSize(),
-				url = "https://www.naver.com",
+				url = "about:blank",
 			)
 		}
 	}

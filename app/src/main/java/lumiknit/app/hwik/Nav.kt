@@ -11,7 +11,13 @@ object RouteSourceList
 @Serializable
 data class RouteSourceEdit(
 	// If null, it means to create a new source.
-	var sourceID: String? = null,
+	val sourceID: Long? = null,
+)
+
+@Serializable
+data class RouteSourceTest(
+	// If null, it means to create a new source.
+	val processStr: String
 )
 
 @Serializable
@@ -21,7 +27,8 @@ open class NavCallbacks {
 	open fun onRouteMain() {}
 	open fun onRouteWebShowView() {}
 	open fun onRouteSourceList() {}
-	open fun onRouteSourceEdit(sourceID: String?) {}
+	open fun onRouteSourceEdit(sourceID: Long?) {}
+	open fun onRouteSourceTest(process: String) {}
 	open fun onRoutePreferences() {}
 	open fun onBack() {}
 }

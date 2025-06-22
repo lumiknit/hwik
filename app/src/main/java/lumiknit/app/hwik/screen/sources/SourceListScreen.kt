@@ -4,10 +4,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,15 +22,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
-import lumiknit.app.hwik.core.PickerScript
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -38,25 +40,16 @@ fun SourceListScreen(
 	val coroutineScope = rememberCoroutineScope()
 	var db = PSDatabase.getDatabase(context)
 
+	var listLoading by remember { mutableStateOf(false) }
 	var sources by remember { mutableStateOf<List<PSSourceEntity>>(listOf()) }
 
 	var loadFromDB = suspend {
-		sources = db.psScriptDao().getAll()
-	}
-
-	val addRandOrigin = {
-		coroutineScope.launch {
-			val newOrigin = PSSourceEntity(
-				lastFetched = Clock.System.now(),
-				url = "Hello akjsdklajsldkjaskldjalksjdlaksjdklasjdklajslkdjaksldjaklsdjalksjdlaksjdlk",
-				rawScript = "aksld",
-				script = PickerScript(
-				)
-			)
-			db.psScriptDao().insert(newOrigin)
-			loadFromDB()
+		listLoading = true
+		try {
+			sources = db.psScriptDao().getAll()
+		} finally {
+			listLoading = false
 		}
-		Unit
 	}
 
 	val deleteOrigin = { origin: PSSourceEntity ->
@@ -76,7 +69,15 @@ fun SourceListScreen(
 					navCallbacks.onBack()
 				},
 				menuItems = listOf(
-					MenuItem(title = "Refresh All", onClick = {
+					MenuItem(title = "Refresh List", onClick = {
+						coroutineScope.launch {
+							loadFromDB()
+						}
+					}),
+					MenuItem(title = "Update Sources", onClick = {
+						coroutineScope.launch {
+							loadFromDB()
+						}
 					}),
 				)
 			)
@@ -92,6 +93,14 @@ fun SourceListScreen(
 				.padding(innerPadding)
 		) {
 			ListSectionTitle("Script Sources (${sources.size})")
+
+			if (listLoading) {
+				CircularProgressIndicator(
+					modifier = Modifier.width(64.dp),
+					color = MaterialTheme.colorScheme.secondary,
+					trackColor = MaterialTheme.colorScheme.surfaceVariant,
+				)
+			}
 
 			Row {
 				// Add button

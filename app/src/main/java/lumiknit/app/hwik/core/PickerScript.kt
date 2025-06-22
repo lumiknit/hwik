@@ -40,9 +40,24 @@ class CondWait(val seconds: Double) : PickerCond()
  */
 @Serializable
 data class PickerStep(
-	var condList: MutableList<PickerCond> = mutableListOf(),
+	var condWaitSeconds: Double = 0.0,
 	var code: String = "",
 )
+
+@Serializable
+data class PickerProcess(
+	var steps: MutableList<PickerStep> = mutableListOf(),
+) {
+	fun toJSON(): String {
+		return Json.encodeToString(this)
+	}
+
+	companion object {
+		fun fromJSON(json: String): PickerProcess {
+			return Json.decodeFromString(json)
+		}
+	}
+}
 
 private val prettyJSON = Json { prettyPrint = true }
 
@@ -57,9 +72,15 @@ data class PickerScript(
 	var id: String = "",
 	var meta: Meta = Meta(),
 
+	var urlRE: String = "",
+
 	// Core scripts
-	var articleList: MutableList<PickerStep> = mutableListOf(),
-	var articleContent: MutableList<PickerStep> = mutableListOf(),
+	/** ArticleList: (lastState: JSONObject) => (JSONObject, URLs) */
+	var articleList: PickerProcess = PickerProcess(),
+	/** ArticleContent: (url: String) => Article */
+	var articleContent: PickerProcess = PickerProcess(),
+	/** Search: (query: String) => URLs */
+	var search: PickerProcess = PickerProcess(),
 ) {
 	fun toPrettyJSON(): String {
 		return prettyJSON.encodeToString(this)
@@ -73,12 +94,6 @@ data class PickerScript(
 	companion object {
 		fun fromJSON(json: String): PickerScript {
 			return Json.decodeFromString(json)
-		}
-
-		fun fromJSONLines(jsonLines: String): List<PickerScript> {
-			return jsonLines.lines().mapNotNull { line ->
-				if (line.trim().isBlank()) null else fromJSON(line)
-			}
 		}
 	}
 }

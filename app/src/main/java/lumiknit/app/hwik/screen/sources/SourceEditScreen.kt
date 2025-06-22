@@ -13,12 +13,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,42 +29,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
+import lumiknit.app.hwik.core.PSSourceEntity
+import lumiknit.app.hwik.core.PickerScript
+import lumiknit.app.hwik.core.fetchPickerScript
 import lumiknit.app.hwik.core.sanitizeFetchURL
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
-import okhttp3.OkHttpClient
-import okhttp3.Request
-
-suspend fun fetchTextFromURL(url: String): String {
-	val client = OkHttpClient()
-	val request = Request.Builder()
-		.url(sanitizeFetchURL(url))
-		.build()
-
-	return withContext(Dispatchers.IO) {
-		try {
-			client.newCall(request).execute().use { response ->
-				if (!response.isSuccessful) throw Exception("Unexpected code $response")
-				response.body?.string() ?: ""
-			}
-		} catch (e: Exception) {
-			"Error fetching script: ${e.message}"
-		}
-	}
-}
+import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
 
 @Composable
 fun SourceEditScreen(
 	navCallbacks: NavCallbacks,
-	sourceID: String? = null // Pass originId if editing an existing source, null for new
+	sourceID: Long? = null // Pass originId if editing an existing source, null for new
 ) {
 	val context = LocalContext.current
 	val coroutineScope = rememberCoroutineScope()
@@ -71,56 +58,92 @@ fun SourceEditScreen(
 
 	var url by remember { mutableStateOf("") }
 	var rawScript by remember { mutableStateOf("") }
+	var script by remember { mutableStateOf(PickerScript()) }
 
 	var fetchingContents by remember { mutableStateOf(false) }
 	var fetchedFromURL by remember { mutableStateOf(false) }
 
-	// TODO: Load existing origin and script if originId is not null
-	//  LaunchedEffect(originId) {
-	//      if (originId != null) {
-	//          val origin = db.ssOriginDao().getById(originId)
-	//          val scriptItem = db.ssScriptDao().getByOriginId(originId) // You'll need to add this DAO method
-	//          origin?.let { url = it.url }
-	//          scriptItem?.let { directScript = it.script /* or however you store it */ }
-	//      }
-	//  }
+	var errorMsg by remember { mutableStateOf("") }
+
+	LaunchedEffect(sourceID) {
+		if (sourceID != null) {
+			val origin = db.psScriptDao().getById(sourceID)
+			if (origin == null) {
+				errorMsg = "Source not found"
+				Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+				navCallbacks.onBack() // Navigate back if source not found
+				return@LaunchedEffect
+			}
+			url = origin.url ?: ""
+			rawScript = origin.rawScript
+		}
+	}
 
 	val handleLoadFromUrl = {
 		coroutineScope.launch {
-			if (url.isNotBlank()) {
-				fetchingContents = true
-				rawScript = fetchTextFromURL(url)
-				fetchedFromURL = true
-				fetchingContents = false
-			} else {
-				Toast.makeText(context, "URL cannot be empty", Toast.LENGTH_SHORT)
-					.show()
+			if (url.isBlank()) {
+				errorMsg = "URL cannot be empty"
+				Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+				return@launch
+			}
+
+			fetchingContents = true
+			val result = fetchPickerScript(url)
+			fetchedFromURL = true
+			fetchingContents = false
+
+			if (result.raw != null) {
+				rawScript = result.raw
+			}
+			if (result.script != null) {
+				rawScript = result.script.toPrettyJSON()
+			}
+
+			if (result.error != null) {
+				errorMsg = "Error fetching script: ${result.error}"
+				Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
 			}
 		}
 		Unit
 	}
 
+	val tryToPack: (() -> PSSourceEntity?) = tryToPack@{
+		val url = if (fetchedFromURL) sanitizeFetchURL(url) else null
+		val rawScript = rawScript.trim()
+		return@tryToPack try {
+			val script = PickerScript.fromJSON(rawScript)
+			val item = PSSourceEntity(
+				id = sourceID ?: 0,
+				url = url,
+				rawScript = rawScript,
+				script = script,
+				lastFetched = Clock.System.now()
+			)
+			item
+		} catch (e: Exception) {
+			errorMsg = "Error parsing script: ${e.message}"
+			Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+			null
+		}
+	}
+
 	val handleSave = {
 		coroutineScope.launch {
-			// TODO: Implement your save logic
-			// This will involve creating or updating SSOriginEntity and SSItemEntity
-			// and then saving them to the database.
-			// Consider if the script comes from the URL or direct input.
-
-			// Example (very basic, needs more robust logic):
-			// if (originId == null) { // New source
-			//     val newOrigin = SSOriginEntity(url = url, lastFetched = Clock.System.now())
-			//     val newOriginId = db.ssOriginDao().insert(newOrigin) // Assuming insert returns the ID
-			//     val newScript = SSItemEntity(
-			//         originID = newOriginId,
-			//         script = if (fetchedScript.isNotBlank()) fetchedScript else directScript,
-			//         // ... other fields
-			//     )
-			//     db.ssScriptDao().insert(newScript)
-			// } else { // Existing source
-			//     // Update logic
-			// }
-			navCallbacks.onBack() // Go back after saving
+			var packed = tryToPack()
+			if (packed != null) {
+				if (sourceID != null) {
+					// Update existing source
+					db.psScriptDao().update(packed)
+				} else {
+					db.psScriptDao().insert(packed)
+				}
+				Toast.makeText(context, "Source saved successfully", Toast.LENGTH_SHORT)
+					.show()
+				navCallbacks.onBack() // Navigate back after saving
+			} else {
+				Toast.makeText(context, "Failed to save source", Toast.LENGTH_SHORT)
+					.show()
+			}
 		}
 		Unit
 	}
@@ -147,7 +170,8 @@ fun SourceEditScreen(
 			ListSectionTitle("Remote URL")
 			Text(
 				"If you have a remote source, you can enter its URL here. " +
-						"Fetching the script will allow you to preview it before saving."
+						"Fetching the script will allow you to preview it before saving.",
+				style = listItemDescTextStyle
 			)
 			OutlinedTextField(
 				value = url,
@@ -190,7 +214,11 @@ fun SourceEditScreen(
 				modifier = Modifier
 					.fillMaxWidth()
 					.height(200.dp), // Adjust height as needed
-				keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii), // Good for code
+				textStyle = TextStyle(
+					fontFamily = FontFamily.Monospace
+				),
+				keyboardOptions =
+					KeyboardOptions(keyboardType = KeyboardType.Ascii), // Good for code
 				maxLines = 20
 			)
 			if (fetchedFromURL) {
@@ -201,7 +229,28 @@ fun SourceEditScreen(
 				)
 			}
 
-			Spacer(modifier = Modifier.weight(1f)) // Push button to the bottom
+			HorizontalDivider()
+
+			ListSectionTitle("Script Edit")
+
+			PSEdit(
+				navCallbacks = navCallbacks,
+				value = script,
+				onValueChange = {
+					script = it
+					rawScript = it.toPrettyJSON()
+				},
+			)
+
+			HorizontalDivider()
+
+			if (errorMsg.isNotBlank()) {
+				Text(
+					text = errorMsg,
+					color = MaterialTheme.colorScheme.error,
+					modifier = Modifier.padding(top = 8.dp)
+				)
+			}
 
 			Button(
 				onClick = handleSave,

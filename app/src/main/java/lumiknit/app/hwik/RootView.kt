@@ -21,6 +21,7 @@ import lumiknit.app.hwik.screen.main.MainScreen
 import lumiknit.app.hwik.screen.prefs.PreferencesView
 import lumiknit.app.hwik.screen.sources.SourceEditScreen
 import lumiknit.app.hwik.screen.sources.SourceListScreen
+import lumiknit.app.hwik.screen.sources.SourceTestScreen
 import lumiknit.app.hwik.screen.webcontainer.WebShowView
 import lumiknit.app.hwik.state.GlobalStore
 
@@ -48,8 +49,12 @@ fun RootView() {
 			navController.navigate(RouteSourceList)
 		}
 
-		override fun onRouteSourceEdit(sourceID: String?) {
+		override fun onRouteSourceEdit(sourceID: Long?) {
 			navController.navigate(RouteSourceEdit(sourceID))
+		}
+
+		override fun onRouteSourceTest(process: String) {
+			navController.navigate(RouteSourceTest(process))
 		}
 
 		override fun onRoutePreferences() {
@@ -111,6 +116,13 @@ fun RootView() {
 				SourceEditScreen(
 					navCallbacks = navCallbacks,
 					sourceID = e.sourceID,
+				)
+			}
+			composable<RouteSourceTest> { v ->
+				val e: RouteSourceTest = v.toRoute()
+				SourceTestScreen(
+					navCallbacks = navCallbacks,
+					processJSON = e.processStr,
 				)
 			}
 			composable<RoutePreferences> {
