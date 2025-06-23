@@ -3,6 +3,7 @@ package lumiknit.app.hwik.core
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 interface Div {}
 
@@ -121,5 +122,15 @@ data class Article(
 ) {
 	override fun toString(): String {
 		return "Article(meta=$meta, content=$content)"
+	}
+
+	fun toJSON(): String {
+		return Json.encodeToString(this)
+	}
+
+	companion object {
+		fun fromJSON(json: String): Article {
+			return Json.decodeFromString(json)
+		}
 	}
 }

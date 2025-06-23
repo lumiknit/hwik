@@ -23,7 +23,7 @@ import lumiknit.app.hwik.screen.sources.SourceEditScreen
 import lumiknit.app.hwik.screen.sources.SourceListScreen
 import lumiknit.app.hwik.screen.sources.SourceTestScreen
 import lumiknit.app.hwik.screen.webcontainer.WebShowView
-import lumiknit.app.hwik.state.GlobalStore
+import lumiknit.app.hwik.state.GlobalVM
 
 // Routes
 
@@ -141,7 +141,7 @@ fun RootView() {
 				showWebView = false
 			})
 
-		val cmc = GlobalStore.confirmModalCallback.value
+		val cmc = GlobalVM.confirmModalCallback.value
 		if (cmc != null) {
 			ConfirmModal(
 				props = cmc

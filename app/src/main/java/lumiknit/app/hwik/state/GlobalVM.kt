@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.suspendCancellableCoroutine
 import lumiknit.app.hwik.components.modal.ConfirmModalProps
 
-object GlobalStore : ViewModel() {
+object GlobalVM : ViewModel() {
 	// Modal
 	val confirmModalCallback = mutableStateOf<ConfirmModalProps?>(null)
 

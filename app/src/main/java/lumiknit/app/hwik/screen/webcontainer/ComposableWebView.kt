@@ -1,5 +1,6 @@
 package lumiknit.app.hwik.screen.webcontainer
 
+import android.graphics.Bitmap
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.WebResourceRequest
@@ -37,6 +38,16 @@ class CustomWebViewClient : WebViewClient() {
 		Log.d("CustomWebViewClient", "Loading URL: ${request?.url}")
 		WebControlProvider.onURLChanged(request?.url.toString())
 		return true // Return true to indicate that we handled the URL loading
+	}
+
+	override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+		super.onPageStarted(view, url, favicon)
+		WebControlProvider.onPageStart()
+	}
+
+	override fun onPageFinished(view: WebView?, url: String?) {
+		super.onPageFinished(view, url)
+		WebControlProvider.onPageLoaded(url)
 	}
 }
 

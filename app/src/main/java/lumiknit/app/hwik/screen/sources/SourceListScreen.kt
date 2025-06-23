@@ -1,5 +1,7 @@
 package lumiknit.app.hwik.screen.sources
 
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,9 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,7 +35,10 @@ import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
+import lumiknit.app.hwik.state.GlobalVM
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
+import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
+import lumiknit.app.hwik.ui.theme.listItemTitleTextStyle
 
 @Composable
 fun SourceListScreen(
@@ -47,6 +55,11 @@ fun SourceListScreen(
 		listLoading = true
 		try {
 			sources = db.psScriptDao().getAll()
+			Toast.makeText(
+				context,
+				"Loaded ${sources.size} sources",
+				Toast.LENGTH_SHORT
+			).show()
 		} finally {
 			listLoading = false
 		}
@@ -125,6 +138,80 @@ fun SourceListScreen(
 					}
 				)
 			}
+		}
+	}
+}
+
+// Items
+
+@Composable
+fun PSSourceItem(
+	entity: PSSourceEntity,
+	onClick: () -> Unit,
+	onDelete: () -> Unit,
+) {
+	val coroutineScope = rememberCoroutineScope()
+	val context = LocalContext.current
+	val db =
+		remember { PSDatabase.getDatabase(context) } // Remember the DB instance
+
+	var enabled by remember { mutableStateOf(true) }
+
+	LaunchedEffect(entity) {
+		enabled = entity.enabled
+	}
+
+	Row(
+		modifier = Modifier
+			.padding(
+				horizontal = 8.dp,
+				vertical = 4.dp
+			)
+	) {
+		Checkbox(
+			checked = enabled,
+			onCheckedChange = {
+				coroutineScope.launch {
+					db.psScriptDao().update(entity.copy(enabled = it))
+					enabled = it
+				}
+			},
+		)
+
+		Column(
+			modifier = Modifier
+				.weight(1f)
+				.clickable(onClick = onClick)
+		) {
+			val title = entity.script.meta.getTitle()
+			Text(
+				if (title.isNotEmpty()) title else "Unnamed(id: ${entity.id})",
+				style = listItemTitleTextStyle
+			)
+			Text(
+				entity.url ?: "No URL",
+				style = listItemDescTextStyle
+			)
+			Text(
+				"Last fetched: ${entity.lastFetched}",
+				style = listItemDescTextStyle
+			)
+		}
+		IconButton(
+			onClick = {
+				coroutineScope.launch {
+					if (GlobalVM.showConfirmModal(
+							"Delete Source",
+							"Are you sure you want to delete this source?"
+						)
+					) {
+						onDelete()
+						Toast.makeText(context, "Origin deleted", Toast.LENGTH_SHORT).show()
+					}
+				}
+			},
+		) {
+			Icon(Icons.Default.Delete, contentDescription = "Delete Source")
 		}
 	}
 }

@@ -28,6 +28,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
@@ -35,7 +37,6 @@ import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PickerProcess
 import lumiknit.app.hwik.screen.webcontainer.WebController
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
-import org.json.JSONObject
 
 @Composable
 fun SourceTestScreen(
@@ -62,14 +63,14 @@ fun SourceTestScreen(
 		result = null
 
 		// Convert input to JSONObject
-		var inputJSON: JSONObject
+		var inputJSON: JsonObject
 		try {
 			val inputJson = inputState.ifBlank { null }
 			if (inputJson == null) {
 				setError("Input cannot be empty")
 				return
 			}
-			inputJSON = JSONObject(inputJson)
+			inputJSON = Json.decodeFromString<JsonObject>(inputJson)
 		} catch (e: Exception) {
 			e.printStackTrace()
 			setError("Invalid JSON input: ${e.message}")
@@ -130,7 +131,10 @@ fun SourceTestScreen(
 				value = inputState,
 				onValueChange = { inputState = it },
 				label = { Text("Input (JSON)") },
-				modifier = Modifier.fillMaxWidth()
+				modifier = Modifier.fillMaxWidth(),
+				textStyle = TextStyle(
+					fontFamily = FontFamily.Monospace
+				)
 			)
 
 			Row(
@@ -160,13 +164,32 @@ fun SourceTestScreen(
 			}
 
 			if (result?.steps != null) {
-				val steps = process?.steps ?: emptyList()
+				val steps = result?.steps ?: emptyList()
 				Text("Results:")
 				// Show index and monospace text for each result
-				for ((index, result) in steps.withIndex()) {
+				for ((index, res) in steps.withIndex()) {
 					ListSectionTitle("Step ${index + 1}.")
+
+					// Show original code
+					val code = """
+// --- Wait: ${process?.steps[index]?.condWaitSeconds} sec
+${process?.steps[index]?.code}
+// --- Result
+					""".trimIndent()
 					Text(
-						text = "${index + 1}: $result",
+						text = code,
+						style = TextStyle(
+							fontFamily = FontFamily.Monospace,
+						)
+					)
+
+					Text(
+						text = """
+							// --- RAW
+							${res.raw}
+							// --- Next State
+							${Json.encodeToString(JsonObject.serializer(), res.state)}
+						""".trimIndent(),
 						style = TextStyle(
 							fontFamily = FontFamily.Monospace,
 						)

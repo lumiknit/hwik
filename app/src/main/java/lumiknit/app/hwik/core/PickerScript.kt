@@ -11,7 +11,18 @@ data class Meta(
 	var author: String? = null,
 	var version: String? = null,
 	var etc: MutableMap<String, String> = mutableMapOf(),
-)
+) {
+	fun getTitle(): String {
+		if (name != null) {
+			if (version != null) {
+				return "$name v$version"
+			} else {
+				return name!!
+			}
+		}
+		return ""
+	}
+}
 
 /**
  * PickerCond is a condition for a step in the extraction process.

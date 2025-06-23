@@ -2,6 +2,7 @@ package lumiknit.app.hwik.screen.sources
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -152,13 +153,6 @@ private fun EditProcess(
 	ListSectionTitle("Script: $name")
 
 	Column(
-		modifier = Modifier
-			.padding(8.dp)
-			.border(
-				width = 1.dp,
-				color = MaterialTheme.colorScheme.outline,
-				shape = MaterialTheme.shapes.small
-			)
 	) {
 		Button(onClick = {
 			navCallbacks.onRouteSourceTest(process.toJSON())
@@ -228,55 +222,66 @@ private fun EditProcessStep(
 	onMoveDown: () -> Unit,
 	onDelete: () -> Unit,
 ) {
-	Column(
-		modifier = Modifier
-			.padding(horizontal = 16.dp),
+	Box(
+		modifier = Modifier.border(
+			width = 1.dp,
+			color = MaterialTheme.colorScheme.outline,
+			shape = MaterialTheme.shapes.small
+		)
 	) {
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = Arrangement.SpaceBetween,
-			verticalAlignment = Alignment.CenterVertically
+		Column(
+			modifier = Modifier
+				.padding(8.dp),
 		) {
-			Text("Step ${index + 1}")
-			Row {
-				IconButton(onClick = onMoveUp) {
-					Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Move Up")
-				}
-				IconButton(onClick = onMoveDown) {
-					Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Move Down")
-				}
-				IconButton(onClick = onDelete) {
-					Icon(Icons.Filled.Delete, contentDescription = "Delete")
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				Text("Step ${index + 1}")
+				Row {
+					IconButton(onClick = onMoveUp) {
+						Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Move Up")
+					}
+					IconButton(onClick = onMoveDown) {
+						Icon(
+							Icons.Filled.KeyboardArrowDown,
+							contentDescription = "Move Down"
+						)
+					}
+					IconButton(onClick = onDelete) {
+						Icon(Icons.Filled.Delete, contentDescription = "Delete")
+					}
 				}
 			}
-		}
 
-		Row(modifier = Modifier.fillMaxWidth()) {
-			TextField(
-				value = step.condWaitSeconds.toString(),
-				onValueChange = {
-					onStepChange(
-						step.copy(
-							condWaitSeconds = it.toDoubleOrNull() ?: 0.0
+			Row(modifier = Modifier.fillMaxWidth()) {
+				TextField(
+					value = step.condWaitSeconds.toString(),
+					onValueChange = {
+						onStepChange(
+							step.copy(
+								condWaitSeconds = it.toDoubleOrNull() ?: 0.0
+							)
 						)
-					)
-				},
-				label = { Text("Wait for page load") },
-				modifier = Modifier.weight(1f)
+					},
+					label = { Text("Wait for page load") },
+					modifier = Modifier.weight(1f)
+				)
+			}
+
+			Spacer(modifier = Modifier.height(8.dp))
+
+			TextField(
+				value = step.code,
+				onValueChange = { onStepChange(step.copy(code = it)) },
+				label = { Text("JavaScript Code") },
+				modifier = Modifier.fillMaxWidth(),
+				textStyle = TextStyle(
+					fontFamily = FontFamily.Monospace,
+				),
+				minLines = 3
 			)
 		}
-
-		Spacer(modifier = Modifier.height(8.dp))
-
-		TextField(
-			value = step.code,
-			onValueChange = { onStepChange(step.copy(code = it)) },
-			label = { Text("JavaScript Code") },
-			modifier = Modifier.fillMaxWidth(),
-			textStyle = TextStyle(
-				fontFamily = FontFamily.Monospace,
-			),
-			minLines = 3
-		)
 	}
 }

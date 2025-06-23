@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
+import lumiknit.app.hwik.state.ContentsVM
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 /**
@@ -33,9 +34,11 @@ fun MainScreen(
 			TopBar(
 				title = title,
 				menuItems = listOf(
-					MenuItem(title = "Sources", onClick = {
-						navCallbacks.onRouteSourceList()
-					}),
+					MenuItem(
+						title = "Sources(${ContentsVM.pickers.size})",
+						onClick = {
+							navCallbacks.onRouteSourceList()
+						}),
 					MenuItem(title = "WebView", onClick = {
 						navCallbacks.onRouteWebShowView()
 					}),

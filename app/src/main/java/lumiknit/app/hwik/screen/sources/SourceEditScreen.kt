@@ -76,6 +76,12 @@ fun SourceEditScreen(
 			}
 			url = origin.url ?: ""
 			rawScript = origin.rawScript
+			try {
+				script = PickerScript.fromJSON(rawScript)
+			} catch (e: Exception) {
+				errorMsg = "Error parsing script: ${e.message}"
+				Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
+			}
 		}
 	}
 
@@ -96,7 +102,7 @@ fun SourceEditScreen(
 				rawScript = result.raw
 			}
 			if (result.script != null) {
-				rawScript = result.script.toPrettyJSON()
+				script = result.script
 			}
 
 			if (result.error != null) {
