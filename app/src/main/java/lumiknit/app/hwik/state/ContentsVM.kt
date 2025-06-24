@@ -78,9 +78,7 @@ object ContentsVM : ViewModel() {
 	private fun removeRandomFetched(): FetchedResult? {
 		if (fetchedArticleURLs.isEmpty()) return null
 		val randomIndex = (0 until fetchedArticleURLs.size).random()
-		val removed = fetchedArticleURLs[randomIndex]
-		fetchedArticleURLs.removeAt(randomIndex)
-		return removed
+		return fetchedArticleURLs.removeAt(randomIndex)
 	}
 
 	suspend fun fetchList(): Boolean {
@@ -89,8 +87,10 @@ object ContentsVM : ViewModel() {
 			return false
 		}
 
-		val script = pickers[nextListFetch].script
+		val picker = pickers[nextListFetch]
+		val script = picker.script
 		nextListFetch = (nextListFetch + 1) % pickers.size
+		Log.i("ContentsVM", "Fetching list using script: ${script.id}")
 
 		val result =
 			WebController.runScriptSteps(
@@ -201,8 +201,7 @@ object ContentsVM : ViewModel() {
 		var retries = 10
 		while (retries > 0 && popped == null) {
 			// Fetch more lists
-			if (!fetchList())
-				return
+			fetchList()
 			popped = removeRandomFetched()
 			retries--
 		}

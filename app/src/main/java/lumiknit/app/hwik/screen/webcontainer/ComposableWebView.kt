@@ -3,6 +3,7 @@ package lumiknit.app.hwik.screen.webcontainer
 import android.graphics.Bitmap
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -48,6 +49,11 @@ class CustomWebViewClient : WebViewClient() {
 	override fun onPageFinished(view: WebView?, url: String?) {
 		super.onPageFinished(view, url)
 		WebControlProvider.onPageLoaded(url)
+	}
+
+	@JavascriptInterface
+	fun onData(data: String) {
+		Log.d("CustomWebViewClient", "Data loaded: $data")
 	}
 }
 
@@ -147,8 +153,13 @@ fun ComposableWebView(
 	AndroidView(
 		factory = { context ->
 			val wv = WebView(context)
+			val cli = CustomWebViewClient()
 
-			wv.webViewClient = CustomWebViewClient()
+			wv.webViewClient = cli
+			wv.addJavascriptInterface(
+				cli,
+				"android"
+			)
 
 			wv.settings.apply {
 				javaScriptEnabled = true
