@@ -35,6 +35,7 @@ import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
+import lumiknit.app.hwik.state.ContentsVM
 import lumiknit.app.hwik.state.GlobalVM
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
@@ -55,6 +56,7 @@ fun SourceListScreen(
 		listLoading = true
 		try {
 			sources = db.psScriptDao().getAll()
+			ContentsVM.loadScriptsFromSources(sources)
 			Toast.makeText(
 				context,
 				"Loaded ${sources.size} sources",

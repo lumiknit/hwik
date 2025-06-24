@@ -7,9 +7,9 @@ import kotlinx.serialization.json.Json
 @Serializable
 data class Meta(
 	var name: String? = null,
-	var description: String? = null,
-	var author: String? = null,
 	var version: String? = null,
+	var author: String? = null,
+	var description: String? = null,
 	var etc: MutableMap<String, String> = mutableMapOf(),
 ) {
 	fun getTitle(): String {
@@ -63,6 +63,17 @@ data class PickerProcess(
 		return Json.encodeToString(this)
 	}
 
+	fun buildText(sb: StringBuilder, name: String) {
+		sb.append("/// * $name\n\n")
+		for (step in steps) {
+			sb.append("/// -")
+			if (step.condWaitSeconds > 0) {
+				sb.append(" wait ${step.condWaitSeconds}")
+			}
+			sb.append("\n").append(step.code).append("\n\n")
+		}
+	}
+
 	companion object {
 		fun fromJSON(json: String): PickerProcess {
 			return Json.decodeFromString(json)
@@ -102,9 +113,59 @@ data class PickerScript(
 		return Json.encodeToString(this)
 	}
 
+	fun toText(): String {
+		val sb = StringBuilder()
+
+		sb.append("///# $id\n")
+
+		if (meta.name != null) {
+			sb.append("///@name ${meta.name}\n")
+		}
+		if (meta.version != null) {
+			sb.append("///@version ${meta.version}\n")
+		}
+		if (meta.author != null) {
+			sb.append("///@author ${meta.author}\n")
+		}
+		if (meta.description != null) {
+			sb.append("///@description ${meta.description}\n")
+		}
+
+		if (urlRE.isNotEmpty()) {
+			sb.append("///@urlRE $urlRE\n")
+		}
+
+		sb.append("\n")
+
+		if (articleList.steps.isNotEmpty()) {
+			articleList.buildText(sb, "ArticleList")
+		}
+
+		if (articleContent.steps.isNotEmpty()) {
+			articleContent.buildText(sb, "ArticleContent")
+		}
+
+		if (search.steps.isNotEmpty()) {
+			search.buildText(sb, "Search")
+		}
+
+		return sb.toString()
+	}
+
 	companion object {
 		fun fromJSON(json: String): PickerScript {
 			return Json.decodeFromString(json)
+		}
+
+		fun fromText(text: String): PickerScript {
+			val trimmed = text.trim()
+			if (trimmed.startsWith("{")) {
+				// If the text starts with '{', it may be JSON
+				return fromJSON(trimmed)
+			} else {
+				// Otherwise, parse the text format
+				return PickerScriptParser.parse(trimmed)
+			}
 		}
 	}
 }

@@ -1,7 +1,8 @@
 package lumiknit.app.hwik.screen.main
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -9,10 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.unit.dp
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
@@ -53,27 +51,23 @@ fun MainScreen(
 		containerColor = LocalCustomColorsPalette.current.background,
 		contentColor = LocalCustomColorsPalette.current.onBackground,
 	) { innerPadding ->
-		Box(
+		Column(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(innerPadding)
 		) {
 			Pager(
 				modifier = Modifier
-					.fillMaxSize(),
+					.fillMaxWidth()
+					.weight(1f),
 				state,
 				onPageChange = { _i, newTitle ->
 					title = newTitle
 				},
 			)
 
-			FloatingButton(
-				modifier = Modifier
-					.align(Alignment.BottomCenter)
-					.shadow(
-						elevation = 8.dp,
-					),
-				dropdownModifier = Modifier.align(Alignment.BottomEnd),
+			BottomButtons(
+				modifier = Modifier.fillMaxWidth(),
 				state = state,
 			)
 		}

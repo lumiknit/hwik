@@ -3,6 +3,7 @@ package lumiknit.app.hwik.screen.main
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,9 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -48,7 +51,6 @@ import lumiknit.app.hwik.core.Span
 import lumiknit.app.hwik.core.TextSpan
 import lumiknit.app.hwik.core.TitleDiv
 import lumiknit.app.hwik.core.VideoDiv
-import lumiknit.app.hwik.core.exampleArticle
 import lumiknit.app.hwik.ui.theme.CustomColorsPalette
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 import java.text.DateFormat
@@ -74,6 +76,7 @@ private fun convSpanStyle(
 	return SpanStyle(
 		fontWeight = if (spanStyle.bold) FontWeight.Bold else FontWeight.Normal,
 		fontStyle = if (spanStyle.italic) FontStyle.Italic else FontStyle.Normal,
+		fontFamily = if (spanStyle.monospace) FontFamily.Monospace else FontFamily.SansSerif,
 		textDecoration = when {
 			spanStyle.underline -> TextDecoration.Underline
 			spanStyle.strikeThrough -> TextDecoration.LineThrough
@@ -224,12 +227,14 @@ fun ArticleMetaView(
 	modifier: Modifier = Modifier,
 	meta: ArticleMeta,
 ) {
+	val uriHandler = LocalUriHandler.current
 	var showDetails by remember { mutableStateOf(false) }
 
 	Column(modifier = modifier) {
 		Text(
-			text = "${meta.title}",
+			text = meta.title,
 			fontSize = TITLE_1_FONT_SIZE.sp,
+			lineHeight = TITLE_1_FONT_SIZE.sp * 1.2f,
 			fontWeight = FontWeight.ExtraBold,
 			modifier = Modifier
 				.fillMaxWidth()
@@ -244,6 +249,15 @@ fun ArticleMetaView(
 		)
 		if (showDetails) {
 			Text(
+				modifier = Modifier.clickable(
+					enabled = meta.href.isNotEmpty(),
+					onClick = { uriHandler.openUri(meta.href) }
+				),
+				text = "URL: ${meta.href}",
+				textDecoration = TextDecoration.Underline,
+				fontSize = 14.sp,
+			)
+			Text(
 				text = "Author: ${meta.author ?: "Unknown"}",
 				fontSize = 14.sp,
 			)
@@ -253,7 +267,7 @@ fun ArticleMetaView(
 			)
 		}
 		HorizontalDivider(
-			modifier = Modifier.padding(vertical = 4.dp),
+			modifier = Modifier.padding(vertical = 6.dp),
 			thickness = 1.dp,
 			color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
 		)
@@ -263,9 +277,9 @@ fun ArticleMetaView(
 @Composable
 fun ArticleView(
 	modifier: Modifier = Modifier,
-	article: Article = exampleArticle(),
+	article: Article,
 ) {
-	SelectionContainer {
+	SelectionContainer(modifier) {
 		Column(
 			modifier = modifier.verticalScroll(rememberScrollState())
 		) {
@@ -280,6 +294,13 @@ fun ArticleView(
 					div = div,
 				)
 			}
+
+			// Bottom padding.
+			Spacer(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(vertical = 32.dp)
+			)
 		}
 	}
 }

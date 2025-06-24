@@ -77,7 +77,7 @@ fun SourceEditScreen(
 			url = origin.url ?: ""
 			rawScript = origin.rawScript
 			try {
-				script = PickerScript.fromJSON(rawScript)
+				script = PickerScript.fromText(rawScript)
 			} catch (e: Exception) {
 				errorMsg = "Error parsing script: ${e.message}"
 				Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
@@ -117,7 +117,7 @@ fun SourceEditScreen(
 		val url = if (fetchedFromURL) sanitizeFetchURL(url) else null
 		val rawScript = rawScript.trim()
 		return@tryToPack try {
-			val script = PickerScript.fromJSON(rawScript)
+			val script = PickerScript.fromText(rawScript)
 			val item = PSSourceEntity(
 				id = sourceID ?: 0,
 				url = url,
@@ -216,7 +216,7 @@ fun SourceEditScreen(
 					rawScript = it
 					fetchedFromURL = false
 				},
-				label = { Text("Picker Script in JSON") },
+				label = { Text("Picker Script") },
 				modifier = Modifier
 					.fillMaxWidth()
 					.height(200.dp), // Adjust height as needed
@@ -244,7 +244,7 @@ fun SourceEditScreen(
 				value = script,
 				onValueChange = {
 					script = it
-					rawScript = it.toPrettyJSON()
+					rawScript = it.toText()
 				},
 			)
 

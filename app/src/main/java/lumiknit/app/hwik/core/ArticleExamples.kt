@@ -8,6 +8,7 @@ fun exampleArticle(): Article {
 			title = "Example Article Good Wow amazing",
 			author = "Author Name",
 			date = Instant.parse("2023-10-01T12:00:00Z"),
+			href = "https://example.com/article",
 		),
 		content = listOf<Div>(
 			TitleDiv(text = "Introduction", level = 1),

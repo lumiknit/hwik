@@ -169,6 +169,7 @@ object WebController {
 		var state = inputs
 
 		for ((idx, step) in ss.withIndex()) {
+			delay(100)
 			waitForPageReady()
 			if (step.condWaitSeconds > 0) {
 				Log.d(
@@ -180,12 +181,7 @@ object WebController {
 
 			Log.d("WebCtrl:runScriptSteps", "Step $idx: ${step.code}")
 
-			val script =
-				"""
-					(function($) {
-					  ${step.code}
-					})($state)
-				""".trimIndent()
+			val script = wrapPickerScript(step.code, state)
 			try {
 				val result = goAsync(WebTaskType.EVAL_JS, script)
 				if (result.error != null) {

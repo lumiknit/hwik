@@ -2,12 +2,15 @@ package lumiknit.app.hwik.core
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-interface Div {}
+@Serializable
+sealed interface Div {}
 
 @Serializable
+@SerialName("title")
 data class TitleDiv(
 	val text: String,
 	val level: Int = 1,
@@ -18,6 +21,7 @@ data class TitleDiv(
 }
 
 @Serializable
+@SerialName("image")
 data class ImageDiv(
 	var url: String,
 	var alt: String = "",
@@ -28,6 +32,7 @@ data class ImageDiv(
 }
 
 @Serializable
+@SerialName("video")
 data class VideoDiv(
 	var url: String,
 	var alt: String = "",
@@ -38,6 +43,7 @@ data class VideoDiv(
 }
 
 @Serializable
+@SerialName("p")
 data class ParagraphDiv(
 	var content: List<Span>,
 ) : Div {
@@ -46,7 +52,8 @@ data class ParagraphDiv(
 	}
 }
 
-interface Span {}
+@Serializable
+sealed interface Span {}
 
 @Serializable
 data class SpanStyle(
@@ -54,14 +61,17 @@ data class SpanStyle(
 	var italic: Boolean = false,
 	var underline: Boolean = false,
 	var strikeThrough: Boolean = false,
-	var lightRGB: String? = null, // Color for light mode.
+	var monospace: Boolean = false,
+	var fgColor: String? = null, // Color for light mode.
+	var bgColor: String? = null, // Background color for light mode.
 ) {
 	override fun toString(): String {
-		return "SpanStyle(bold=$bold, italic=$italic, underline=$underline, strikeThrough=$strikeThrough, lightRGB=$lightRGB)"
+		return "SpanStyle(bold=$bold, italic=$italic, underline=$underline, strikeThrough=$strikeThrough, fgLight=$fgColor, bgLight=$bgColor)"
 	}
 }
 
 @Serializable
+@SerialName("text")
 data class TextSpan(
 	var content: String,
 	var style: SpanStyle = SpanStyle(),
@@ -72,6 +82,7 @@ data class TextSpan(
 }
 
 @Serializable
+@SerialName("link")
 data class LinkSpan(
 	var content: String,
 	var url: String,
@@ -83,25 +94,14 @@ data class LinkSpan(
 }
 
 @Serializable
-data class CodeSpan(
-	var content: String,
-	var language: String? = null, // Optional language for syntax highlighting.
-	var style: SpanStyle = SpanStyle(),
-) : Span {
-	override fun toString(): String {
-		return "CodeSpan(text='$content', language=$language, style=$style)"
-	}
-}
-
-@Serializable
 data class ArticleMeta(
+	var href: String, // URL to the article or source.
 	var title: String,
 	var author: String? = null,
 	@Contextual()
 	var date: Instant? = null,
 	var tags: List<String> = emptyList(),
 	var description: String? = null,
-	var href: String? = null, // URL to the article or source.
 
 	@Contextual()
 	var fetchedAt: Instant? = null,

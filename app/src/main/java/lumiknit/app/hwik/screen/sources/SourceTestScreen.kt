@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.Button
@@ -45,6 +47,8 @@ fun SourceTestScreen(
 ) {
 	val context = LocalContext.current
 	val coroutineScope = rememberCoroutineScope()
+
+	val scrollState = rememberScrollState()
 
 	var process by remember { mutableStateOf<PickerProcess?>(null) }
 
@@ -126,6 +130,7 @@ fun SourceTestScreen(
 				.fillMaxSize()
 				.padding(innerPadding)
 				.padding(16.dp)
+				.verticalScroll(scrollState)
 		) {
 			TextField(
 				value = inputState,

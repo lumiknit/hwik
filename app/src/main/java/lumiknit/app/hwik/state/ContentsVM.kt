@@ -3,6 +3,7 @@ package lumiknit.app.hwik.state
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import lumiknit.app.hwik.core.Article
 import lumiknit.app.hwik.core.PSDatabase
+import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.core.PickerScript
 import lumiknit.app.hwik.screen.webcontainer.WebController
 
@@ -26,37 +28,67 @@ data class ContentsPicker(
 	val searchable: Boolean,
 )
 
+data class ArticleSearchRequest(
+	val query: String,
+	val insertPage: Int = 0,
+	val onFinish: () -> Unit = {}
+)
+
 object ContentsVM : ViewModel() {
 	var pickers by mutableStateOf<List<ContentsPicker>>(listOf())
 
 	var nextListFetch: Int = 0
 
-	var fetchedArticleURLs by mutableStateOf<List<FetchedResult>>(listOf())
+	val fetchedArticleURLs = mutableStateListOf<FetchedResult>()
 
-	var articles by mutableStateOf<List<Article>>(listOf())
+	val articles = mutableStateListOf<Article>()
 
-	suspend fun loadScriptsFromDB(context: Context) {
-		val db = PSDatabase.getDatabase(context)
-		pickers = db.psScriptDao().getAll().map {
+	var requests = mutableListOf<ArticleSearchRequest>()
+
+	fun requestSearch(
+		query: String,
+		insertPage: Int = 0,
+		onFinish: () -> Unit = {}
+	) {
+		val request = ArticleSearchRequest(query, insertPage, onFinish)
+		requests.add(request)
+		Log.i("ContentsVM", "Search request added: $query")
+	}
+
+	fun loadScriptsFromSources(
+		entities: List<PSSourceEntity>
+	) {
+		pickers = entities.map { entity ->
 			ContentsPicker(
-				script = it.script,
-				urlRE = Regex(it.script.urlRE),
-				searchable = it.script.search.steps.isNotEmpty()
+				script = entity.script,
+				urlRE = Regex(entity.script.urlRE),
+				searchable = entity.script.search.steps.isNotEmpty()
 			)
 		}
 		nextListFetch = 0
+		Log.i("ContentsVM", "Scripts loaded from sources: ${pickers.size} pickers")
+	}
+
+	suspend fun loadScriptsFromDB(context: Context) {
+		val db = PSDatabase.getDatabase(context)
+		val entities = db.psScriptDao().getAll()
+		loadScriptsFromSources(entities)
 	}
 
 	private fun removeRandomFetched(): FetchedResult? {
 		if (fetchedArticleURLs.isEmpty()) return null
 		val randomIndex = (0 until fetchedArticleURLs.size).random()
 		val removed = fetchedArticleURLs[randomIndex]
-		fetchedArticleURLs =
-			fetchedArticleURLs.toMutableList().apply { removeAt(randomIndex) }
+		fetchedArticleURLs.removeAt(randomIndex)
 		return removed
 	}
 
 	suspend fun fetchList(): Boolean {
+		if (pickers.isEmpty()) {
+			Log.e("ContentsVM", "No pickers available to fetch lists")
+			return false
+		}
+
 		val script = pickers[nextListFetch].script
 		nextListFetch = (nextListFetch + 1) % pickers.size
 
@@ -75,15 +107,13 @@ object ContentsVM : ViewModel() {
 				Log.e("ContentsVM", "No URLs found in the result")
 				return false
 			}
-			fetchedArticleURLs = fetchedArticleURLs.toMutableList().apply {
-				rawURLs.forEach { e ->
-					if (e.jsonPrimitive.isString && e.jsonPrimitive.content.isNotBlank()) {
-						add(
-							FetchedResult(
-								url = e.jsonPrimitive.content
-							)
+			rawURLs.forEach { e ->
+				if (e.jsonPrimitive.isString && e.jsonPrimitive.content.isNotBlank()) {
+					fetchedArticleURLs.add(
+						FetchedResult(
+							url = e.jsonPrimitive.content
 						)
-					}
+					)
 				}
 			}
 			return true
@@ -95,7 +125,10 @@ object ContentsVM : ViewModel() {
 
 	suspend fun fetchArticle(url: String): Article? {
 		// Find the picker that matches the URL
-		val picker = pickers.find { it.urlRE.matches(url) }
+		val picker = pickers.find {
+			Log.d("ContentsVM", "URL $url with re ${it.urlRE.pattern}")
+			it.urlRE.find(url) != null
+		}
 		if (picker == null) {
 			Log.e("ContentsVM", "No picker found for URL: $url")
 			return null
@@ -122,7 +155,48 @@ object ContentsVM : ViewModel() {
 		}
 	}
 
-	suspend fun setNextArticle() {
+	suspend fun handleSearchRequest() {
+		if (requests.isEmpty()) {
+			Log.i("ContentsVM", "No search requests to handle")
+			return
+		}
+
+		val request = requests.removeAt(0)
+		Log.i("ContentsVM", "Handling search request: ${request.query}")
+
+		// Check if the request is an URL
+		if (request.query.startsWith("http://") || request.query.startsWith("https://")) {
+			Log.i("ContentsVM", "Request is a URL, fetching article directly")
+			val article = fetchArticle(request.query)
+			if (article != null) {
+				articles.add(request.insertPage, article)
+			} else {
+				Log.e("ContentsVM", "Failed to fetch article for URL: ${request.query}")
+			}
+			request.onFinish()
+			return
+		}
+
+		// Otherwise, treat it as a search query
+		// TODO: Implement search functionality
+	}
+
+	suspend fun step(
+		contentsEnough: Boolean = false
+	) {
+
+		// First of all, check if there are some requests
+		if (requests.isNotEmpty()) {
+			Log.i("ContentsVM", "Handling search request from queue")
+			handleSearchRequest()
+			return
+		}
+
+		if (contentsEnough)
+			return
+
+		Log.i("ContentsVM", "Start to fetch more articles")
+
 		var popped = removeRandomFetched()
 		var retries = 10
 		while (retries > 0 && popped == null) {
@@ -145,8 +219,6 @@ object ContentsVM : ViewModel() {
 			return
 		}
 		// Add to articles list
-		articles = articles.toMutableList().apply {
-			add(article)
-		}
+		articles.add(article)
 	}
 }
