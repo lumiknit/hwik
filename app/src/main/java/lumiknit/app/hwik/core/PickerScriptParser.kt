@@ -1,69 +1,38 @@
 package lumiknit.app.hwik.core
 
-/*
-## PickerScript Grammar Details
-
-For real structure, see PickerScript.kt
-
-### Features
-
-* Based on Javascript, with special commenting syntax for directives.
-
-### Syntax
-
-- PickerScript is just a javascript,
-- Special line comments '///' are used as directives.
-- '/// <sym> ...'
-- <sym> can be used for
-  - '/// # <id>': Denote the script ID.
-  - '/// @ <key> <value>': Metadata key-value pairs. key is case-insensitive.
-    - <key>: name, version, author, description
-    - urlRE is a special key that defines the URL regex for which this script is applicable.
-  - '/// * <name>': Start of a process, which has multiple steps.
-    - Currently, there are 3 kind of processes: 'articleList', 'articleContent', 'search'.
-    - 'articleList' is used to extract a list of URLs.
-    - 'articleContent' is used to extract content of an article from a URL
-    - 'search' is non-empty if there can be some search steps with query.
-   - '/// - [wait <seconds>]': Step start marker.
-     - If wait is specified, it will wait for the specified number of seconds before executing the next step.
-
-Example:
-
-/// # google_search
-
-/// @ name Google Search
-/// @ version 2025.0624.1
-/// @ author Aleph
-/// @ description Find google search results
-/// @ urlre ^https?://www\.google\.com/search\?q=.*$
-
-
-/// * articleList
-
-/// -
-// For the first step, just go to google search page
-// '$' is a special variable that contains all state (including inputs, last step's outputs)
-window.location.href = "https://www.google.com/search?q=" + $query;
-
-/// - wait 1
-// Just wait for 1 second
-
-/// -
-let urls = []
-document.querySelectorAll("a").forEach((e) => {
-	urls.push(e.href)
-});
-$.urls = urls; // Save the URLs to the state
-
-
-/// * search
-...
-*/
-
 class ParserException(
 	lineNum: Int,
 	errorMsg: String
 ) : Exception("Error parsing PickerScript at line $lineNum: $errorMsg")
+
+/**
+ * Return prefix-removed version if exists
+ */
+private fun String.rmPrefix(prefix: String): String? {
+	if (this.startsWith(prefix)) {
+		return this.substring(prefix.length).trimStart()
+	}
+	return null
+}
+
+/**
+ * Lowercase and remove all underscores
+ */
+private fun String.canonicalMetaKey(): String {
+	return lowercase().replace("_", "")
+}
+
+/**
+ * Split the string by whitespaces.
+ * It must return a list with at least one element.
+ */
+private fun String.divBySpaces(): Pair<String, String> {
+	val arr = this.split("\\s+".toRegex(), 2)
+	val a = arr[0].trim().canonicalMetaKey()
+	val b = if (arr.size > 1) arr[1].trim() else ""
+	return Pair(a, b)
+}
+
 
 /**
  * PickerScriptParser is a parser for PickerScript.
@@ -85,6 +54,9 @@ class PickerScriptParser(
 
 	var stepCondWaitSeconds: Double = 0.0
 
+	/**
+	 * Finish gather steps for the process, and push.
+	 */
 	private fun flushProcess() {
 		if (steps.isEmpty()) {
 			return
@@ -115,82 +87,84 @@ class PickerScriptParser(
 		processKind = ""
 	}
 
+	/**
+	 * Handle meta directive
+	 * line should be a string AFTER '/// @'
+	 */
+	private fun handleMetaDirective(line: String) {
+		val (key, value) = line.divBySpaces()
+		when (key) {
+			"id" -> script.id = value
+			"urlre" -> script.urlRE = value
+			"name" -> script.meta.name = value
+			"version" -> script.meta.version = value
+			"author" -> script.meta.author = value
+			"description" -> script.meta.description = value
+			else -> throw ParserException(ln, "Unknown metadata key: $key")
+		}
+	}
+
+	/**
+	 * Handle process start directive
+	 * line should be a string AFTER '/// *'
+	 */
+	private fun handleProcessStartDirective(line: String) {
+		if (processKind.isNotEmpty()) {
+			flushProcess() // Flush previous process if exists
+		}
+		processKind = line.lowercase()
+		if (processKind !in listOf("articlelist", "articlecontent", "search")) {
+			throw ParserException(ln, "Unknown process kind: $processKind")
+		}
+	}
+
+	/**
+	 * Handle step divider directive
+	 * line should be a string AFTER '/// -'
+	 */
+	private fun handleStepDividerDirective(line: String) {
+		var (key, left) = line.divBySpaces()
+		when (key) {
+			"wait" -> {
+				try {
+					stepCondWaitSeconds = left.toDouble()
+				} catch (e: NumberFormatException) {
+					throw ParserException(ln, "Invalid wait seconds: '${left}', $e")
+				}
+			}
+
+			else -> {
+				// Reset all steps
+				stepCondWaitSeconds = 0.0
+			}
+		}
+	}
+
+
+	/**
+	 * Parse derective
+	 */
 	private fun tryParseDirective(): Boolean {
 		if (ln >= lines.size) return false
-
-		val line = lines[ln].trim()
-		val prefix = "///"
-
-		if (!line.startsWith(prefix)) return false
+		val content = lines[ln].trim().rmPrefix("///")
+		if (content == null || content.isEmpty()) return false;
 		ln++ // Move to next line
-
-		val content = line.substring(prefix.length).trim()
-
-		if (line.isEmpty()) {
-			throw ParserException(ln, "Empty directive line")
-		}
 
 		val sym = content[0]
 		var left = content.substring(1).trim()
-		val getSplitted =
-			{ limit: Int ->
-				val out = left.split("\\s+".toRegex(), limit = limit)
-				if (out.size < limit) {
-					throw ParserException(ln, "Invalid directive format: $line")
-				}
-				out
-			}
 
 		when (sym) {
-			'#' -> { // ID
-				script.id = left
-			}
-
-			'@' -> { // Metadata
-				val parts = getSplitted(2)
-				val key = parts[0].lowercase()
-				val value = parts[1]
-				when (key) {
-					"name" -> script.meta.name = value
-					"version" -> script.meta.version = value
-					"author" -> script.meta.author = value
-					"description" -> script.meta.description = value
-					"urlre" -> script.urlRE = value
-					else -> throw ParserException(ln, "Unknown metadata key: $key")
-				}
-			}
-
-			'*' -> { // Start of a process
-				if (processKind.isNotEmpty()) {
-					flushProcess() // Flush previous process if exists
-				}
-				processKind = left.lowercase()
-				if (processKind !in listOf("articlelist", "articlecontent", "search")) {
-					throw ParserException(ln, "Unknown process kind: $processKind")
-				}
-			}
-
-			'-' -> { // Step start marker
-				// Reset step conditions
-				stepCondWaitSeconds = 0.0
-
-				var lowered = left.lowercase()
-				val keywordWait = "wait"
-				if (lowered.startsWith(keywordWait)) {
-					val rest = left.substring(keywordWait.length).trim()
-					// Try to parse as double
-					try {
-						stepCondWaitSeconds = rest.toDouble()
-					} catch (e: NumberFormatException) {
-						throw ParserException(ln, "Invalid wait seconds: $rest")
-					}
-				}
-			}
+			'@' -> handleMetaDirective(left)
+			'*' -> handleProcessStartDirective(left)
+			'-' -> handleStepDividerDirective(left)
 		}
 
 		return true
 	}
 
+	/**
+	 * Try to gather code parts.
+	 */
 	private fun tryParseCode(): Boolean {
 		val lnStart = ln
 
@@ -212,6 +186,9 @@ class PickerScriptParser(
 		return ln > lnStart
 	}
 
+	/**
+	 * Parse lines
+	 */
 	fun parseLines() {
 		while (ln < lines.size) {
 			if (!tryParseDirective() && !tryParseCode()) {

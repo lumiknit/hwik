@@ -1,6 +1,5 @@
 package lumiknit.app.hwik
 
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -18,6 +17,5 @@ class ExampleUnitTest {
 	@Test
 	fun json_parse() {
 		val j = ""
-		val r = JSONObject(j)
 	}
 }

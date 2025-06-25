@@ -41,8 +41,7 @@ class PickerScriptTest {
 	@Test
 	fun testParse1() {
 		val src1 = """
-			/// # main
-			
+			/// @ id main
 			/// @ name Hello, world!
 			///@version 25.0601.1
 			
@@ -62,16 +61,31 @@ class PickerScriptTest {
 				/// -
 				  then
 		""".trimIndent()
+		val validate = { parsed: PickerScript ->
+			assert(parsed.id == "main") { "Parsed ID should be 'main'" }
+			assert(parsed.meta.name == "Hello, world!") { "Parsed name should be 'Hello, world!'" }
+			assert(parsed.meta.version == "25.0601.1") { "Parsed version should be '25.0601.1'" }
+			assert(parsed.meta.description == "This is a test script.") { "Parsed description should be 'This is a test script.'" }
+			assert(parsed.articleList.steps.size == 2) { "Parsed articleList should have 2 steps" }
+			assert(parsed.articleList.steps[0].code.contains("console.log(\"First abc\")")) { "First step code should be 'console.log(\"First abc\")'" }
+			assert(parsed.articleList.steps[1].condWaitSeconds == 1.5) { "Second step should have condWaitSeconds of 1.5" }
+			assert(parsed.search.steps.size == 2) { "Parsed search should have 2 steps" }
+		}
+
 		val parsed = PickerScript.fromText(src1)
 		println("Parsed PickerScript:\n${parsed.toText()}")
+		validate(parsed)
 
-		assert(parsed.id == "main") { "Parsed ID should be 'main'" }
-		assert(parsed.meta.name == "Hello, world!") { "Parsed name should be 'Hello, world!'" }
-		assert(parsed.meta.version == "25.0601.1") { "Parsed version should be '25.0601.1'" }
-		assert(parsed.meta.description == "This is a test script.") { "Parsed description should be 'This is a test script.'" }
-		assert(parsed.articleList.steps.size == 2) { "Parsed articleList should have 2 steps" }
-		assert(parsed.articleList.steps[0].code.contains("console.log(\"First abc\")")) { "First step code should be 'console.log(\"First abc\")'" }
-		assert(parsed.articleList.steps[1].condWaitSeconds == 1.5) { "Second step should have condWaitSeconds of 1.5" }
-		assert(parsed.search.steps.size == 2) { "Parsed search should have 2 steps" }
+		// DUmp-parse
+		val dumpedScript = parsed.toText()
+		val dumpedJSON = parsed.toJSON()
+
+		val p1 = PickerScript.fromText(dumpedScript)
+		val p2 = PickerScript.fromText(dumpedJSON)
+
+		// Deep compare
+		validate(p1)
+		validate(p2)
+		assert(p1.equals(p2))
 	}
 }

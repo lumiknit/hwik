@@ -116,7 +116,7 @@ data class PickerScript(
 	fun toText(): String {
 		val sb = StringBuilder()
 
-		sb.append("///# $id\n")
+		sb.append("///@id $id\n")
 
 		if (meta.name != null) {
 			sb.append("///@name ${meta.name}\n")
