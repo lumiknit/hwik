@@ -16,7 +16,7 @@ import lumiknit.app.hwik.core.Article
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.core.PickerScript
-import lumiknit.app.hwik.screen.webcontainer.WebController
+import lumiknit.app.hwik.screen.webcontainer.WebScriptRunner
 
 data class FetchedResult(
 	val url: String,
@@ -93,7 +93,7 @@ object ContentsVM : ViewModel() {
 		Log.i("ContentsVM", "Fetching list using script: ${script.id}")
 
 		val result =
-			WebController.runScriptSteps(
+			WebScriptRunner.runScriptSteps(
 				script.articleList.steps,
 				JsonObject(emptyMap())
 			)
@@ -102,7 +102,7 @@ object ContentsVM : ViewModel() {
 			return false
 		}
 		try {
-			val rawURLs = result.finalResult["urls"]?.jsonArray
+			val rawURLs = result.finalResult["\$urls"]?.jsonArray
 			if (rawURLs == null || rawURLs.isEmpty()) {
 				Log.e("ContentsVM", "No URLs found in the result")
 				return false
@@ -136,7 +136,7 @@ object ContentsVM : ViewModel() {
 
 		val script = picker.script
 		val result =
-			WebController.runScriptSteps(
+			WebScriptRunner.runScriptSteps(
 				script.articleContent.steps,
 				JsonObject(mapOf("url" to JsonPrimitive(url)))
 			)
@@ -146,7 +146,7 @@ object ContentsVM : ViewModel() {
 		}
 
 		try {
-			val articleField = result.finalResult["article"]
+			val articleField = result.finalResult["\$article"]
 			val article = Article.fromJSON(Json.encodeToString(articleField))
 			return article
 		} catch (e: Exception) {

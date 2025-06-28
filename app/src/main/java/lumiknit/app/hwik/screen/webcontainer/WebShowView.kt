@@ -76,8 +76,8 @@ fun WebShowView(
 			Row {
 				IconButton(
 					onClick = {
-						WebController.go(
-							WebTaskType.REFRESH
+						WebController.addTask(
+							WebTaskRefresh()
 						)
 					}
 				) {
@@ -89,8 +89,8 @@ fun WebShowView(
 				}
 				IconButton(
 					onClick = {
-						WebController.go(
-							WebTaskType.NAV_BACK
+						WebController.addTask(
+							WebTaskNavBack()
 						)
 					}
 				) {
@@ -102,8 +102,8 @@ fun WebShowView(
 				}
 				IconButton(
 					onClick = {
-						WebController.go(
-							WebTaskType.NAV_FORWARD
+						WebController.addTask(
+							WebTaskNavForward()
 						)
 					}
 				) {
@@ -123,9 +123,8 @@ fun WebShowView(
 						.horizontalScroll(rememberScrollState())
 						.onKeyEvent({ ev ->
 							if (ev.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER) {
-								WebController.go(
-									WebTaskType.NAV_TO,
-									sanitizeFetchURL(url)
+								WebController.addTask(
+									WebTaskNavTo(sanitizeFetchURL(url))
 								)
 								return@onKeyEvent true
 							}
@@ -136,9 +135,8 @@ fun WebShowView(
 					singleLine = true,
 					keyboardActions = KeyboardActions(
 						onDone = {
-							WebController.go(
-								WebTaskType.NAV_TO,
-								sanitizeFetchURL(url)
+							WebController.addTask(
+								WebTaskNavTo(sanitizeFetchURL(url))
 							)
 						}
 					),

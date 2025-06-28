@@ -52,8 +52,6 @@ class PickerScriptParser(
 	var processKind: String = ""
 	var steps: MutableList<PickerStep> = mutableListOf()
 
-	var stepCondWaitSeconds: Double = 0.0
-
 	/**
 	 * Finish gather steps for the process, and push.
 	 */
@@ -123,21 +121,6 @@ class PickerScriptParser(
 	 * line should be a string AFTER '/// -'
 	 */
 	private fun handleStepDividerDirective(line: String) {
-		var (key, left) = line.divBySpaces()
-		when (key) {
-			"wait" -> {
-				try {
-					stepCondWaitSeconds = left.toDouble()
-				} catch (e: NumberFormatException) {
-					throw ParserException(ln, "Invalid wait seconds: '${left}', $e")
-				}
-			}
-
-			else -> {
-				// Reset all steps
-				stepCondWaitSeconds = 0.0
-			}
-		}
 	}
 
 
@@ -178,7 +161,6 @@ class PickerScriptParser(
 			// Push step
 			steps.add(
 				PickerStep(
-					condWaitSeconds = stepCondWaitSeconds,
 					code = code
 				)
 			)

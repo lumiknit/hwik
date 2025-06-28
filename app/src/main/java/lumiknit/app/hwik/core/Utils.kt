@@ -1,7 +1,7 @@
 package lumiknit.app.hwik.core
 
 private val generousURLRegex = Regex(
-	"""^([A-Za-z0-9]+://)?([^/]+)(/.*)?$""",
+	"""^([A-Za-z0-9]+:/*)?([^/]+)(/.*)?$""",
 )
 
 /**

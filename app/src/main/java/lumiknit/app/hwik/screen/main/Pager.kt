@@ -56,7 +56,7 @@ fun Pager(
 				val contentsEnough =
 					pagerState.currentPage + PAGE_PRELOAD < ContentsVM.articles.size
 				ContentsVM.step(contentsEnough)
-				delay(200)
+				delay(2000)
 			}
 		}
 	}

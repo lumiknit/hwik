@@ -1,6 +1,5 @@
 package lumiknit.app.hwik.core
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -25,33 +24,12 @@ data class Meta(
 }
 
 /**
- * PickerCond is a condition for a step in the extraction process.
- */
-@Serializable
-sealed class PickerCond
-
-/**
- * CondPageReady represents the step should be executed when the page is ready.
- */
-@Serializable
-@SerialName("page_ready")
-class CondPageReady : PickerCond()
-
-/**
- * CondWait represents the step should be wait in seconds.
- */
-@Serializable
-@SerialName("wait")
-class CondWait(val seconds: Double) : PickerCond()
-
-/**
  * PickerStep is a step in the extration process.
  * Each step has a condition, when the script can be executed,
  * and a JavaScript code to be executed in WebView.
  */
 @Serializable
 data class PickerStep(
-	var condWaitSeconds: Double = 0.0,
 	var code: String = "",
 )
 
@@ -67,9 +45,6 @@ data class PickerProcess(
 		sb.append("/// * $name\n\n")
 		for (step in steps) {
 			sb.append("/// -")
-			if (step.condWaitSeconds > 0) {
-				sb.append(" wait ${step.condWaitSeconds}")
-			}
 			sb.append("\n").append(step.code).append("\n\n")
 		}
 	}

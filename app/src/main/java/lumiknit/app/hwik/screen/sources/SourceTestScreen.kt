@@ -37,7 +37,7 @@ import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PickerProcess
-import lumiknit.app.hwik.screen.webcontainer.WebController
+import lumiknit.app.hwik.screen.webcontainer.WebScriptRunner
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -55,10 +55,10 @@ fun SourceTestScreen(
 	var inputState by remember { mutableStateOf("{\n}") }
 
 	var running by remember { mutableStateOf(false) }
-	var result by remember { mutableStateOf<WebController.ScriptResults?>(null) }
+	var result by remember { mutableStateOf<WebScriptRunner.RunResult?>(null) }
 
 	fun setError(message: String) {
-		result = WebController.ScriptResults(
+		result = WebScriptRunner.RunResult(
 			error = message
 		)
 	}
@@ -84,7 +84,7 @@ fun SourceTestScreen(
 		// Start with web controller
 		try {
 			running = true
-			result = WebController.runScriptSteps(
+			result = WebScriptRunner.runScriptSteps(
 				process!!.steps,
 				inputJSON,
 			)
@@ -168,8 +168,8 @@ fun SourceTestScreen(
 				Text("Error: ${result?.error}", color = MaterialTheme.colorScheme.error)
 			}
 
-			if (result?.steps != null) {
-				val steps = result?.steps ?: emptyList()
+			if (result?.stepResults != null) {
+				val steps = result?.stepResults ?: emptyList()
 				Text("Results:")
 				// Show index and monospace text for each result
 				for ((index, res) in steps.withIndex()) {
@@ -177,7 +177,7 @@ fun SourceTestScreen(
 
 					// Show original code
 					val code = """
-// --- Wait: ${process?.steps[index]?.condWaitSeconds} sec
+// --- Code
 ${process?.steps[index]?.code}
 // --- Result
 					""".trimIndent()

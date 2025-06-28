@@ -10,7 +10,7 @@ plugins {
 
 android {
 	namespace = "lumiknit.app.hwik"
-	compileSdk = 35
+	compileSdk = 36
 
 	defaultConfig {
 		applicationId = "lumiknit.app.hwik"

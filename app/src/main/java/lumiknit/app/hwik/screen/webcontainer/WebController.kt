@@ -3,33 +3,41 @@ package lumiknit.app.hwik.screen.webcontainer
 import android.util.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
-import kotlinx.coroutines.delay
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import lumiknit.app.hwik.core.PickerStep
+import lumiknit.app.hwik.core.sanitizeFetchURL
 
-enum class WebTaskType {
-	GET_URL,
-	NAV_BACK,
-	NAV_FORWARD,
-	NAV_TO,
-	REFRESH,
-	EVAL_JS,
-}
+// WebTaskType is a kind of task.
 
+sealed class WebTaskType()
+
+class WebTaskGetURL() : WebTaskType()
+class WebTaskNavBack() : WebTaskType()
+class WebTaskNavForward() : WebTaskType()
+class WebTaskNavTo(val url: String) : WebTaskType()
+class WebTaskRefresh() : WebTaskType()
+class WebTaskEvalJS(val script: String, val state: JsonObject) : WebTaskType()
+
+/**
+ * WebTask is a data class for webview task queue item.
+ */
 data class WebTask(
 	val type: WebTaskType,
-	val data: String? = null,
 	val callback: ((result: String, error: String?) -> Unit)? = null
 )
 
+/**
+ * WebControlCallbacks is a base class for callbacks to handle web control events.
+ */
 open class WebControlCallbacks {
 	open fun onURLChanged(url: String) {
 		// This method can be overridden to handle URL changes
 	}
 
-	open fun onPageLoaded(url: String?) {
+	open fun onPageStarted() {
+		// This method can be overridden to handle page load events
+	}
+
+	open fun onPageFinished(url: String) {
 		// This method can be overridden to handle page load events
 	}
 }
@@ -56,6 +64,10 @@ private object WebControlCore {
 		@Synchronized set
 }
 
+/**
+ * WebControlProvider is an object for the web feature provider.
+ * For example, webview.
+ */
 internal object WebControlProvider {
 	fun connect() {
 		if (WebControlCore.isConnected) return
@@ -71,17 +83,27 @@ internal object WebControlProvider {
 		WebControlCore.callbacks.forEach { it.onURLChanged(url) }
 	}
 
-	fun onPageStart() {
+	/**
+	 * Callbacks for page started loading.
+	 */
+	fun onPageStarted() {
 		WebControlCore.pageLoaded = false
-		WebControlCore.callbacks.forEach { it.onPageLoaded(null) }
+		WebControlCore.callbacks.forEach { it.onPageStarted() }
 	}
 
-	fun onPageLoaded(url: String?) {
+	/**
+	 * Callbacks for page finished loading.
+	 */
+	fun onPageFinished(url: String) {
 		WebControlCore.pageLoaded = true
-		WebControlCore.callbacks.forEach { it.onPageLoaded(url) }
+		WebControlCore.callbacks.forEach { it.onPageFinished(url) }
 	}
 }
 
+/**
+ * TaskResult is a data class for the result of a web task.
+ * It contains the result string and an optional error message.
+ */
 data class TaskResult(
 	val result: String,
 	val error: String? = null
@@ -99,138 +121,73 @@ object WebController {
 		WebControlCore.callbacks.remove(callback)
 	}
 
-	fun go(
+	fun addTask(
 		taskType: WebTaskType,
-		data: String? = null,
 		callback: ((result: String, error: String?) -> Unit)? = null
 	) {
-		val task = WebTask(type = taskType, data = data, callback = callback)
+		val task = WebTask(type = taskType, callback = callback)
 		WebControlCore.taskChannel.trySendBlocking(task)
 	}
 
-	suspend fun goAsync(
+	suspend fun addTaskAsync(
 		taskType: WebTaskType,
-		data: String? = null
 	): TaskResult {
 		val waitChannel = Channel<TaskResult>(1)
-		val task = WebTask(type = taskType, data = data, callback = { res, err ->
-			waitChannel.trySendBlocking(TaskResult(result = res, error = err))
-		})
+		val task =
+			WebTask(type = taskType, callback = { res, err ->
+				waitChannel.trySendBlocking(TaskResult(result = res, error = err))
+			})
 		WebControlCore.taskChannel.send(task)
 		return waitChannel.receive()
 	}
 
-	suspend fun waitForPageReady() {
-		while (!WebControlCore.pageLoaded) {
-			Log.d("WebCtrl:waitForPageReady", "Waiting for page to load...")
-			delay(200)
-		}
-		Log.d("WebCtrl:waitForPageReady", "Page is ready")
+	suspend fun runJS(
+		script: String,
+		state: JsonObject = JsonObject(emptyMap())
+	): TaskResult {
+		Log.d("WebCtrl:runJS", "Running script: $script")
+		return addTaskAsync(
+			WebTaskEvalJS(script, state)
+		)
 	}
 
-	data class StepResult(
-		val raw: String,
-		val state: JsonObject,
-	)
-
-	data class ScriptResults(
-		val steps: List<StepResult> = listOf(),
-		val finalResult: JsonObject = JsonObject(emptyMap()),
-		val error: String? = null
-	)
+	suspend fun reset() {
+		goToAndWait("about:blank")
+	}
 
 	/**
-	 * runScriptSteps executes a list of PickerStep scripts in sequence.
-	 * Each step can modify the state, which is passed to the next step.
-	 * The final result is returned as a ScriptResults object.
+	 * Go to a specific URL and wait for the page to load.
 	 */
-	suspend fun runScriptSteps(
-		ss: List<PickerStep>,
-		inputs: JsonObject = JsonObject(emptyMap())
-	): ScriptResults {
-		val results = mutableListOf<StepResult>()
-		var error: String? = null
+	suspend fun goToAndWait(
+		url: String
+	) {
+		val url = sanitizeFetchURL(url)
+		Log.d("WebCtrl:locationAndWait", "Navigating to $url")
 
-		Log.d("WebCtrl:runScriptSteps", "runScriptSteps: $ss, inputs: $inputs")
-
-		Log.d("WebCtrl:runScriptSteps", "goto about:blank to reset state")
-
-		// Before starting, go to about:blank to reset the webview
-		val res = goAsync(WebTaskType.NAV_TO, "about:blank")
-		if (res.error != null) {
-			return ScriptResults(
-				results,
-				error = "Error to reset state: ${res.error}"
-			)
-		}
-
-		Log.d("WebCtrl:runScriptSteps", "reset done, starting steps")
-
-		var state = inputs
-
-		for ((idx, step) in ss.withIndex()) {
-			delay(100)
-			waitForPageReady()
-			if (step.condWaitSeconds > 0) {
-				Log.d(
-					"WebCtrl:runScriptSteps",
-					"Waiting for ${step.condWaitSeconds} seconds before executing step $idx"
-				)
-				delay((step.condWaitSeconds * 1000).toLong())
-			}
-
-			Log.d("WebCtrl:runScriptSteps", "Step $idx: ${step.code}")
-
-			val script = wrapPickerScript(step.code, state)
-			try {
-				val result = goAsync(WebTaskType.EVAL_JS, script)
-				if (result.error != null) {
-					error =
-						"Error executing step $idx, RunError: ${result.error}"
-					break
-				}
-				Log.d("WebCtrl:runScriptSteps", "Step $idx result: ${result.result}")
-				state = buildJsonObject {
-					state.forEach { (key, value) ->
-						put(key, value)
-					}
-					try {
-						val newObject = Json.decodeFromString<JsonObject>(result.result)
-						newObject.forEach { (key, value) ->
-							put(key, value)
-						}
-					} catch (e: Exception) {
-						Log.e(
-							"WebCtrl:runScriptSteps",
-							"Error parsing JSON result from step $idx: ${e.message}"
-						)
-					}
-				}
-				results.add(
-					StepResult(
-						raw = result.result,
-						state = state
-					)
-				)
-			} catch (e: Exception) {
-				error = "Error executing step $idx, Error: ${e.message}"
-				break
+		// Prepare the task to navigate to the URL
+		val waitChannel = Channel<Unit>(1)
+		val callbacks = object : WebControlCallbacks() {
+			override fun onPageFinished(url: String) {
+				Log.d("WebCtrl:locationAndWait", "Page loaded: $url")
+				waitChannel.trySendBlocking(Unit)
 			}
 		}
-		Log.d(
-			"WebCtrl:runScriptSteps",
-			"Finished running steps, outputs: $results, error: $error"
-		)
+		addCallback(callbacks)
 
-		// Go to about:blank to reset the webview again
-		val resetRes = goAsync(WebTaskType.NAV_TO, "about:blank")
-		if (resetRes.error != null) {
-			error = "Error resetting state after running steps: ${resetRes.error}"
+		// Navigate to the URL
+		val result = addTaskAsync(
+			WebTaskNavTo(url),
+		)
+		if (result.error == null) {
+			Log.d("WebCtrl:locationAndWait", "Waiting for page to load...")
+			waitChannel.receive()
+			Log.d("WebCtrl:locationAndWait", "Waiting for page to load done")
 		}
-		waitForPageReady()
 
-		return ScriptResults(
-			results, state, error
-		)
+		removeCallback(callbacks)
+
+		if (result.error != null) {
+			throw Exception("Error navigating to $url: ${result.error}")
+		}
 	}
 }

@@ -255,23 +255,6 @@ private fun EditProcessStep(
 				}
 			}
 
-			Row(modifier = Modifier.fillMaxWidth()) {
-				TextField(
-					value = step.condWaitSeconds.toString(),
-					onValueChange = {
-						onStepChange(
-							step.copy(
-								condWaitSeconds = it.toDoubleOrNull() ?: 0.0
-							)
-						)
-					},
-					label = { Text("Wait for page load") },
-					modifier = Modifier.weight(1f)
-				)
-			}
-
-			Spacer(modifier = Modifier.height(8.dp))
-
 			TextField(
 				value = step.code,
 				onValueChange = { onStepChange(step.copy(code = it)) },
