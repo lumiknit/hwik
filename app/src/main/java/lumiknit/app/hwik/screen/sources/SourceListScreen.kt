@@ -27,9 +27,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.R
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
@@ -79,7 +81,7 @@ fun SourceListScreen(
 	Scaffold(
 		topBar = {
 			TopBar(
-				title = "Sources",
+				title = stringResource(R.string.title_sources),
 				onBack = {
 					navCallbacks.onBack()
 				},
@@ -107,7 +109,7 @@ fun SourceListScreen(
 				.fillMaxSize()
 				.padding(innerPadding)
 		) {
-			ListSectionTitle("Script Sources (${sources.size})")
+			ListSectionTitle("${stringResource(R.string.label_script_sources)} (${sources.size})")
 
 			if (listLoading) {
 				CircularProgressIndicator(
@@ -125,7 +127,7 @@ fun SourceListScreen(
 					}
 				) {
 					Icon(Icons.Default.Add, contentDescription = "Add Source")
-					Text(text = "Add Source")
+					Text(text = stringResource(R.string.label_add_source))
 				}
 			}
 

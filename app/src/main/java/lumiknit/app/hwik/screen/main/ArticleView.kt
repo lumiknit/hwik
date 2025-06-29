@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -23,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.LinkAnnotation
@@ -41,6 +41,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
+import coil3.network.NetworkHeaders
+import coil3.network.httpHeaders
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import kotlinx.datetime.Instant
 import lumiknit.app.hwik.core.Article
 import lumiknit.app.hwik.core.ArticleMeta
@@ -52,6 +56,9 @@ import lumiknit.app.hwik.core.Span
 import lumiknit.app.hwik.core.TextSpan
 import lumiknit.app.hwik.core.TitleDiv
 import lumiknit.app.hwik.core.VideoDiv
+import lumiknit.app.hwik.core.WebImageDiv
+import lumiknit.app.hwik.screen.webcontainer.StaticComposableWeb
+import lumiknit.app.hwik.state.GlobalVM
 import lumiknit.app.hwik.ui.theme.CustomColorsPalette
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 import java.text.DateFormat
@@ -181,14 +188,24 @@ fun DivView(
 		}
 
 		is ImageDiv -> {
-			Text("Image: ${div.url}")
 			AsyncImage(
 				modifier = Modifier
-					.fillMaxWidth()
-					.heightIn(min = 200.dp),
-				model = div.url,
+					.fillMaxWidth(),
+				model = ImageRequest.Builder(LocalContext.current).data(div.url)
+					.crossfade(true)
+					.httpHeaders(
+						NetworkHeaders.Builder().set("User-Agent", GlobalVM.hdUserAgent)
+							.build()
+					)
+					.build(),
+				imageLoader = GlobalVM.setUpImageLoader(LocalContext.current),
 				contentDescription = div.alt,
+				contentScale = if (div.fillWidth) ContentScale.FillWidth else ContentScale.Fit,
 			)
+		}
+
+		is WebImageDiv -> {
+			StaticComposableWeb(modifier = Modifier, div.url)
 		}
 
 		is VideoDiv -> {

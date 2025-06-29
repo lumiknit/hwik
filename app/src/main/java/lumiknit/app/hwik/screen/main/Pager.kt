@@ -19,8 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import lumiknit.app.hwik.state.ContentsVM
 
 val PAGE_PRELOAD = 5
@@ -46,59 +44,67 @@ fun Pager(
 		snapPositionalThreshold = 0.15f
 	)
 
-	LaunchedEffect(Unit) {
-		Log.i("Pager", "Loading scripts from DB")
-
-		coroutineScope.launch {
-			Log.i("Pager", "Start loop")
-
-			while (true) {
-				val contentsEnough =
-					pagerState.currentPage + PAGE_PRELOAD < ContentsVM.articles.size
-				ContentsVM.step(contentsEnough)
-				delay(2000)
-			}
-		}
-	}
-
-	LaunchedEffect(pagerState) {
+	LaunchedEffect(pagerState, ContentsVM.articles) {
 		snapshotFlow { pagerState.currentPage }.collect { page ->
 			state.pageIndex = page
-			onPageChange(page, "Page $page / ${pagerState.pageCount}")
+			ContentsVM.pageIndex = page
+			if (page < 0 || page >= ContentsVM.articles.size) {
+				Log.w("Pager", "Invalid page index: $page")
+				return@collect
+			}
+			onPageChange(page, ContentsVM.articles[page].meta.title)
 		}
 	}
 
 	DisposableEffect(Unit) {
-		state.pageChangeCallback = {
-			coroutineScope.launch {
-				when (it) {
-					-1 -> {
-						Toast.makeText(context, "Next page", Toast.LENGTH_SHORT).show()
-						pagerState.animateScrollToPage(pagerState.currentPage + 1)
-					}
+		ContentsVM.resumstepLoop()
 
-					-2 -> {
-						pagerState.animateScrollToPage(pagerState.currentPage - 1)
+		state.pageChangeCallback = { idx ->
+			when (idx) {
+				-1 -> {
+					if (pagerState.currentPage >= pagerState.pageCount - 1) {
+						Toast.makeText(
+							context,
+							"Already at the last page",
+							Toast.LENGTH_SHORT
+						)
+							.show()
+					} else {
+						pagerState.requestScrollToPage(pagerState.currentPage + 1)
 					}
+				}
 
-					-3 -> {
-						// Refresh action, for now, we just scroll to the current page
-						pagerState.animateScrollToPage(pagerState.currentPage)
+				-2 -> {
+					if (pagerState.currentPage == 0) {
+						Toast.makeText(
+							context,
+							"Already at the first page",
+							Toast.LENGTH_SHORT
+						)
+							.show()
+					} else {
+						pagerState.requestScrollToPage(pagerState.currentPage - 1)
 					}
+				}
 
-					else -> {
-						if (it >= 0 && it < pagerState.pageCount) {
-							Toast.makeText(context, "Jump to page $it", Toast.LENGTH_SHORT)
-								.show()
-							pagerState.animateScrollToPage(it)
-						} else {
-							Log.w("Pager", "Invalid page index: $it")
-						}
+				-3 -> {
+					// Refresh action, for now, we just scroll to the current page
+					pagerState.requestScrollToPage(pagerState.currentPage)
+				}
+
+				else -> {
+					if (idx >= 0 && idx < pagerState.pageCount) {
+						Toast.makeText(context, "Jump to page $idx", Toast.LENGTH_SHORT)
+							.show()
+						pagerState.requestScrollToPage(idx)
+					} else {
+						Log.w("Pager", "Invalid page index: $idx")
 					}
 				}
 			}
 		}
 		onDispose {
+			ContentsVM.pauseStepLoop()
 			// Cleanup if needed when the pager is disposed
 			state.pageChangeCallback = {}
 		}

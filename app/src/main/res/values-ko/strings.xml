@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">휙</string>
+	<string name="dd_menu_sources">소스</string>
+	<string name="dd_menu_webview">웹뷰</string>
+	<string name="dd_menu_preferences">설정</string>
+	<string name="title_sources">소스</string>
+	<string name="label_script_sources">스크립트 소스</string>
+	<string name="label_add_source">소스 추가</string>
+</resources>

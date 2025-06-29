@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 data class MenuItem(
@@ -35,9 +36,9 @@ fun TopBar(
 	onDone: (() -> Unit)? = null,
 ) {
 	var moreExpanded by remember { mutableStateOf(false) }
-	var context = LocalContext.current
+	val context = LocalContext.current
 
-	var colors = TopAppBarColors(
+	val colors = TopAppBarColors(
 		containerColor = LocalCustomColorsPalette.current.appBarBackground,
 		scrolledContainerColor = LocalCustomColorsPalette.current.appBarBackground,
 		navigationIconContentColor = LocalCustomColorsPalette.current.onAppBarBackground,
@@ -47,7 +48,13 @@ fun TopBar(
 
 	TopAppBar(
 		colors = colors,
-		title = { Text(text = title) },
+		title = {
+			Text(
+				text = title,
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis
+			)
+		},
 		navigationIcon = {
 			if (onBack == null) return@TopAppBar
 			IconButton(onClick = onBack) {

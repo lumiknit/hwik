@@ -7,6 +7,10 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -17,6 +21,9 @@ import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.core.PickerScript
 import lumiknit.app.hwik.screen.webcontainer.WebScriptRunner
+
+val PAGE_PREFETCH = 5
+val LOOP_DELAY = 100L
 
 data class FetchedResult(
 	val url: String,
@@ -42,6 +49,8 @@ object ContentsVM : ViewModel() {
 	val fetchedArticleURLs = mutableStateListOf<FetchedResult>()
 
 	val articles = mutableStateListOf<Article>()
+
+	var pageIndex by mutableStateOf(0)
 
 	var requests = mutableListOf<ArticleSearchRequest>()
 
@@ -219,5 +228,48 @@ object ContentsVM : ViewModel() {
 		}
 		// Add to articles list
 		articles.add(article)
+	}
+
+	var job: Job? = null
+	var paused = false
+
+	fun startScrapLoop(scope: CoroutineScope) {
+		if (job != null && job!!.isActive) {
+			Log.w("ContentsVM", "Scrap loop is already running")
+			return
+		}
+
+		job = scope.launch {
+			while (true) {
+				delay(LOOP_DELAY)
+				if (paused) continue;
+				try {
+					step(articles.size >= PAGE_PREFETCH + pageIndex)
+				} catch (e: Exception) {
+					Log.e("ContentsVM", "Error in scrap loop: ${e.message}")
+				}
+			}
+		}
+	}
+
+	fun stopScrapLoop() {
+		if (job == null || !job!!.isActive) {
+			Log.w("ContentsVM", "Scrap loop is not running")
+			job = null
+			return
+		}
+
+		job?.cancel()
+		job = null
+	}
+
+	fun pauseStepLoop() {
+		paused = true
+		Log.i("ContentsVM", "Scrap loop paused")
+	}
+
+	fun resumstepLoop() {
+		paused = false
+		Log.i("ContentsVM", "Scrap loop resumed")
 	}
 }

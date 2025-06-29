@@ -53,6 +53,21 @@ fun PSEdit(
 
 	ListSectionTitle("Meta")
 
+	// ID
+	TextField(
+		value = (value.id),
+		onValueChange = {
+			onValueChange(
+				value.copy(
+					id = it
+				)
+			)
+		},
+		singleLine = true,
+		modifier = textFieldModifier,
+		label = { Text("ID") }
+	)
+
 	// Meta.name
 	TextField(
 		value = (value.meta.name ?: ""),

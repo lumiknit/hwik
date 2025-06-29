@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Hwik</string>
+	<string name="app_name">ひゅっ</string>
 	<string name="dd_menu_sources">Sources</string>
 	<string name="dd_menu_webview">WebView</string>
 	<string name="dd_menu_preferences">Preferences</string>

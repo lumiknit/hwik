@@ -11,7 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.R
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.state.ContentsVM
@@ -24,8 +26,12 @@ import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 fun MainScreen(
 	navCallbacks: NavCallbacks,
 ) {
-	val state = object : MainScreenState() {}
-	var title by remember { mutableStateOf("") }
+	val state by remember { mutableStateOf(object : MainScreenState() {}) }
+
+	var pageIndex by remember { mutableStateOf(0) }
+	var pageTitle by remember { mutableStateOf("") }
+
+	var title = "(${1 + pageIndex} / ${ContentsVM.articles.size}) $pageTitle"
 
 	Scaffold(
 		topBar = {
@@ -33,16 +39,18 @@ fun MainScreen(
 				title = title,
 				menuItems = listOf(
 					MenuItem(
-						title = "Sources(${ContentsVM.pickers.size})",
+						title = "${stringResource(R.string.dd_menu_sources)}(${ContentsVM.pickers.size})",
 						onClick = {
 							navCallbacks.onRouteSourceList()
 						}),
-					MenuItem(title = "WebView", onClick = {
+					MenuItem(title = stringResource(R.string.dd_menu_webview), onClick = {
 						navCallbacks.onRouteWebShowView()
 					}),
-					MenuItem(title = "Preferences", onClick = {
-						navCallbacks.onRoutePreferences()
-					}),
+					MenuItem(
+						title = stringResource(R.string.dd_menu_preferences),
+						onClick = {
+							navCallbacks.onRoutePreferences()
+						}),
 				)
 			)
 		},
@@ -61,8 +69,9 @@ fun MainScreen(
 					.fillMaxWidth()
 					.weight(1f),
 				state,
-				onPageChange = { _i, newTitle ->
-					title = newTitle
+				onPageChange = { pgIdx, pgTitle ->
+					pageIndex = pgIdx
+					pageTitle = pgTitle
 				},
 			)
 

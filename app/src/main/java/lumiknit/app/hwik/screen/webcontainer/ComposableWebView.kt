@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.serialization.json.JsonObject
+import lumiknit.app.hwik.state.GlobalVM
 
 typealias RequestCallback = (String, String?) -> Unit
 
@@ -189,6 +190,8 @@ fun ComposableWebView(
 		factory = { context ->
 			val wv = WebView(context)
 			val cli = CustomWebViewClient()
+
+			GlobalVM.hdUserAgent = wv.settings.userAgentString
 
 			wv.webViewClient = cli
 			wv.addJavascriptInterface(

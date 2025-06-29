@@ -1,5 +1,6 @@
 package lumiknit.app.hwik.screen.main
 
+import android.util.Log
 import lumiknit.app.hwik.state.ContentsVM
 
 open class MainScreenState {
@@ -12,10 +13,12 @@ open class MainScreenState {
 	var pageChangeCallback: (Int) -> Unit = { }
 
 	fun onPrevPage() {
+		Log.d("MainScreenState", "onPrevPage called, current page: $pageIndex")
 		pageChangeCallback(-2)
 	}
 
 	open fun onNextPage() {
+		Log.d("MainScreenState", "onNextPage called, current page: $pageIndex")
 		pageChangeCallback(-1)
 	}
 

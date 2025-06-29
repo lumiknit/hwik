@@ -64,9 +64,16 @@ interface CodeSpan {
  * For paragraphs or text content, use the list of Spans.
  * From the computed styles, you should guess the style of the text.
  *
- * TYPE: (root: HTMLElement) -> Div[]
+ * TYPE: (root: HTMLElement, opts?) -> Div[]
+ *
+ * Options:
+ * - webImage: boolean - If true, images will be converted to web image
+ * - handleImg: (elem: HTMLImageElement) -> Div - Callback to handle image elements
  */
-function $divsFromDOM(root) {
+window.$divsFromDOM = (root, opts) => {
+    let optWebImage = opts?.webImage ?? false;
+    let optHandleImg = opts?.handleImg ?? null;
+
 	let divs = [];
 
 	function getSpanStyle(cs) {
@@ -172,11 +179,17 @@ function $divsFromDOM(root) {
 			}
 			case "img": {
 				flushSpan();
-				divs.push({
-					type: "image",
-					url: node.src,
-					alt: node.alt || "",
-				});
+				var url = node.src;
+				if (optHandleImg) {
+				    divs.push(optHandleImg(node));
+ 				} else {
+                    divs.push({
+                        type: optWebImage ? "webImage" : "image",
+                        url: url,
+                        alt: node.alt || "",
+                        fillWidth: true,
+                    });
+                }
 				break;
 			}
 			case "video": {

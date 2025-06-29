@@ -25,9 +25,21 @@ data class TitleDiv(
 data class ImageDiv(
 	var url: String,
 	var alt: String = "",
+	var fillWidth: Boolean = false,
 ) : Div {
 	override fun toString(): String {
-		return "Image(url='$url', alt='$alt')"
+		return "Image(url='$url', alt='$alt', fillWidth=$fillWidth)"
+	}
+}
+
+@Serializable
+@SerialName("webImage")
+data class WebImageDiv(
+	var url: String,
+	var alt: String = "",
+) : Div {
+	override fun toString(): String {
+		return "WebImage(url='$url', alt='$alt')"
 	}
 }
 
