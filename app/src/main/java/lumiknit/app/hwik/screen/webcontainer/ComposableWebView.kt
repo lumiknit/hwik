@@ -210,6 +210,7 @@ fun ComposableWebView(
 				displayZoomControls = false
 				allowFileAccess = true
 				allowContentAccess = true
+				loadsImagesAutomatically = false
 			}
 
 			wv.apply {

@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +41,7 @@ import androidx.media3.ui.PlayerView
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.datetime.Instant
@@ -192,6 +191,8 @@ fun DivView(
 				modifier = Modifier
 					.fillMaxWidth(),
 				model = ImageRequest.Builder(LocalContext.current).data(div.url)
+					.diskCacheKey(div.url)
+					.diskCachePolicy(CachePolicy.ENABLED)
 					.crossfade(true)
 					.httpHeaders(
 						NetworkHeaders.Builder().set("User-Agent", GlobalVM.hdUserAgent)
@@ -302,7 +303,7 @@ fun ArticleView(
 ) {
 	SelectionContainer(modifier) {
 		Column(
-			modifier = modifier.verticalScroll(rememberScrollState())
+			modifier = modifier
 		) {
 			// Meta field
 			ArticleMetaView(

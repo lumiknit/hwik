@@ -5,23 +5,22 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.PagerDefaults
-import androidx.compose.foundation.pager.VerticalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import lumiknit.app.hwik.state.ContentsVM
-
-val PAGE_PRELOAD = 5
 
 // MainPager is a composable function that creates a vertical pager with the specified number of pages.
 // It currently does not display any content in the pages.
@@ -31,30 +30,9 @@ fun Pager(
 	state: MainScreenState,
 	onPageChange: (Int, String) -> Unit = { _i, s -> },
 ) {
-	val pagerState = rememberPagerState(pageCount = {
-		ContentsVM.articles.size
-	})
-
-	val coroutineScope = rememberCoroutineScope()
-
 	val context = LocalContext.current
-
-	val fling = PagerDefaults.flingBehavior(
-		state = pagerState,
-		snapPositionalThreshold = 0.15f
-	)
-
-	LaunchedEffect(pagerState, ContentsVM.articles) {
-		snapshotFlow { pagerState.currentPage }.collect { page ->
-			state.pageIndex = page
-			ContentsVM.pageIndex = page
-			if (page < 0 || page >= ContentsVM.articles.size) {
-				Log.w("Pager", "Invalid page index: $page")
-				return@collect
-			}
-			onPageChange(page, ContentsVM.articles[page].meta.title)
-		}
-	}
+	val listState = rememberLazyListState()
+	val layoutInfo by remember { derivedStateOf { listState.layoutInfo } }
 
 	DisposableEffect(Unit) {
 		ContentsVM.resumstepLoop()
@@ -62,41 +40,23 @@ fun Pager(
 		state.pageChangeCallback = { idx ->
 			when (idx) {
 				-1 -> {
-					if (pagerState.currentPage >= pagerState.pageCount - 1) {
-						Toast.makeText(
-							context,
-							"Already at the last page",
-							Toast.LENGTH_SHORT
-						)
-							.show()
-					} else {
-						pagerState.requestScrollToPage(pagerState.currentPage + 1)
-					}
+					listState.requestScrollToItem(listState.firstVisibleItemIndex + 1)
 				}
 
 				-2 -> {
-					if (pagerState.currentPage == 0) {
-						Toast.makeText(
-							context,
-							"Already at the first page",
-							Toast.LENGTH_SHORT
-						)
-							.show()
-					} else {
-						pagerState.requestScrollToPage(pagerState.currentPage - 1)
-					}
+					listState.requestScrollToItem(listState.firstVisibleItemIndex - 1)
 				}
 
 				-3 -> {
 					// Refresh action, for now, we just scroll to the current page
-					pagerState.requestScrollToPage(pagerState.currentPage)
+					listState.requestScrollToItem(listState.firstVisibleItemIndex)
 				}
 
 				else -> {
-					if (idx >= 0 && idx < pagerState.pageCount) {
+					if (idx >= 0 && idx < ContentsVM.articles.size) {
 						Toast.makeText(context, "Jump to page $idx", Toast.LENGTH_SHORT)
 							.show()
-						pagerState.requestScrollToPage(idx)
+						listState.requestScrollToItem(idx)
 					} else {
 						Log.w("Pager", "Invalid page index: $idx")
 					}
@@ -110,7 +70,7 @@ fun Pager(
 		}
 	}
 
-	if (pagerState.pageCount == 0) {
+	if (ContentsVM.articles.isEmpty()) {
 		Box(
 			modifier = modifier
 				.padding(8.dp)
@@ -126,16 +86,24 @@ fun Pager(
 			)
 		}
 	} else {
-		VerticalPager(
+		LazyColumn(
+			state = listState,
 			modifier = modifier,
-			state = pagerState,
-			flingBehavior = fling,
-		) { page ->
-			ArticleView(
-				modifier = Modifier
-					.padding(4.dp, 0.dp),
-				article = ContentsVM.articles[page],
-			)
+		) {
+			items(items = ContentsVM.articles) { a ->
+				ArticleView(
+					modifier = Modifier
+						.padding(4.dp, 0.dp),
+					article = a,
+				)
+
+				VerticalDivider(
+					modifier = Modifier
+						.padding(4.dp, 0.dp),
+					thickness = 1.dp,
+					color = MaterialTheme.colorScheme.onSurface,
+				)
+			}
 		}
 	}
 }
