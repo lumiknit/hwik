@@ -12,6 +12,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
+import lumiknit.app.hwik.screen.prefs.comp.PrefBool
+import lumiknit.app.hwik.screen.prefs.comp.PrefInt
+import lumiknit.app.hwik.screen.prefs.comp.PrefText
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -37,6 +40,7 @@ fun PreferencesView(
 	) { innerPadding ->
 		Box(modifier = Modifier.padding(innerPadding)) {
 			Column(
+				modifier = Modifier.padding(16.dp),
 				verticalArrangement = Arrangement.spacedBy(10.dp)
 			) {
 				PrefInt(
@@ -48,6 +52,11 @@ fun PreferencesView(
 					UserPrefs.EXAMPLE_CODE,
 					"Text",
 					"Example text preference",
+				)
+				PrefBool(
+					UserPrefs.EXAMPLE_SWITCH,
+					"Switch",
+					"Example switch preference",
 				)
 			}
 		}

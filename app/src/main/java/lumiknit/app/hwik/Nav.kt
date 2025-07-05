@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 object RouteMain
 
 @Serializable
+object RouteWebViewScreen
+
+@Serializable
 object RouteSourceList
 
 @Serializable

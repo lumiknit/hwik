@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.screen.webcontainer
+package lumiknit.app.hwik.screen.webview
 
 import android.util.Log
 import android.view.KeyEvent
@@ -26,22 +26,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
+import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.core.sanitizeFetchURL
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
-fun WebShowView(
+fun WebShowScreen(
 	modifier: Modifier = Modifier,
-	url: String,
-	onClose: (() -> Unit)? = null,
+	navCallbacks: NavCallbacks,
+	initURL: String = "about:blank",
 ) {
-	var url by remember { mutableStateOf("") }
+	var url by remember { mutableStateOf(initURL) }
 
 	DisposableEffect(Unit) {
 		Log.i("WebShowView", "WebShowView Mounted")
 
-		var wvCallbacks = object : WebControlCallbacks() {
+		val wvCallbacks = object : WebControlCallbacks() {
 			override fun onURLChanged(newUrl: String) {
 				url = newUrl
 			}
@@ -58,9 +59,7 @@ fun WebShowView(
 		topBar = {
 			TopBar(
 				title = "Web",
-				onBack = {
-					onClose?.invoke()
-				}
+				onBack = { navCallbacks.onBack() },
 			)
 		},
 		modifier = modifier

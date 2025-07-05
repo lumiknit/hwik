@@ -9,7 +9,12 @@ data class ConfirmModalProps(
 	val title: String,
 	val message: String,
 	val onClick: (Boolean) -> Unit,
-)
+) : ModalProps() {
+	@Composable
+	override fun render() {
+		ConfirmModal(this)
+	}
+}
 
 @Composable
 fun ConfirmModal(

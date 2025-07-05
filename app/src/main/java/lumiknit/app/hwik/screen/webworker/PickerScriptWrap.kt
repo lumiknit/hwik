@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.screen.webcontainer
+package lumiknit.app.hwik.screen.webworker
 
 fun wrapPickerScript(src: String): String {
 	val wrapped = """

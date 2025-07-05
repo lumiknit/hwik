@@ -38,7 +38,7 @@ import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.state.ContentsVM
-import lumiknit.app.hwik.state.GlobalVM
+import lumiknit.app.hwik.state.ModalVM
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
 import lumiknit.app.hwik.ui.theme.listItemTitleTextStyle
@@ -204,7 +204,7 @@ fun PSSourceItem(
 		IconButton(
 			onClick = {
 				coroutineScope.launch {
-					if (GlobalVM.showConfirmModal(
+					if (ModalVM.showConfirmModal(
 							"Delete Source",
 							"Are you sure you want to delete this source?"
 						)

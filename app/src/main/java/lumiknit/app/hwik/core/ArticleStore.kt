@@ -13,6 +13,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Update
+import kotlinx.datetime.Instant
 
 @ProvidedTypeConverter
 class ArticleConverter {
@@ -36,7 +37,7 @@ data class ArticleEntity(
 
 	var article: Article,
 
-	var read: Boolean = false
+	var readAt: Instant? = null,
 )
 
 @Dao
@@ -65,11 +66,12 @@ interface ArticleDao {
 )
 @TypeConverters(
 	value = [
-		ArticleConverter::class
+		ArticleConverter::class,
+		KotlinInstantConverter::class
 	]
 )
 abstract class ArticleDatabase : RoomDatabase() {
-	abstract fun psScriptDao(): SSItemDao
+	abstract fun articleDao(): ArticleDao
 
 	companion object {
 		@Volatile
@@ -83,6 +85,7 @@ abstract class ArticleDatabase : RoomDatabase() {
 					"article_database"
 				)
 					.addTypeConverter(ArticleConverter())
+					.addTypeConverter(KotlinInstantConverter())
 					.build()
 				INSTANCE = instance
 				instance

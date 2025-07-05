@@ -37,7 +37,7 @@ import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PickerProcess
-import lumiknit.app.hwik.screen.webcontainer.WebScriptRunner
+import lumiknit.app.hwik.screen.webworker.WebContext
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
@@ -55,10 +55,10 @@ fun SourceTestScreen(
 	var inputState by remember { mutableStateOf("{\n}") }
 
 	var running by remember { mutableStateOf(false) }
-	var result by remember { mutableStateOf<WebScriptRunner.RunResult?>(null) }
+	var result by remember { mutableStateOf<WebContext.RunResult?>(null) }
 
 	fun setError(message: String) {
-		result = WebScriptRunner.RunResult(
+		result = WebContext.RunResult(
 			error = message
 		)
 	}
@@ -84,7 +84,7 @@ fun SourceTestScreen(
 		// Start with web controller
 		try {
 			running = true
-			result = WebScriptRunner.runScriptSteps(
+			result = WebContext.runScript(
 				process!!.steps,
 				inputJSON,
 			)

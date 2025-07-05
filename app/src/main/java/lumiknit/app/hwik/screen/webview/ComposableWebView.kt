@@ -1,9 +1,8 @@
-package lumiknit.app.hwik.screen.webcontainer
+package lumiknit.app.hwik.screen.webview
 
 import android.graphics.Bitmap
 import android.util.Log
 import android.view.ViewGroup
-import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -18,10 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import kotlinx.serialization.json.JsonObject
 import lumiknit.app.hwik.state.GlobalVM
-
-typealias RequestCallback = (String, String?) -> Unit
 
 class CustomWebViewClient : WebViewClient() {
 	override fun doUpdateVisitedHistory(
@@ -58,57 +54,6 @@ class CustomWebViewClient : WebViewClient() {
 	}
 }
 
-private object ReqManager {
-	var reqIDCnt: Int = 0
-	val reqCallbacks = mutableMapOf<String, RequestCallback>()
-	fun issueJSReturnID(
-		callback: RequestCallback
-	): String {
-		val now = System.currentTimeMillis()
-		val reqID = "js-${now}-${reqIDCnt++}"
-		reqCallbacks.put(reqID, callback)
-		return reqID
-	}
-
-	@JavascriptInterface
-	fun onReturn(data: String, requestID: String) {
-		val callback = reqCallbacks.remove(requestID)
-		if (callback != null) {
-			Log.d("CustomWebViewClient", "Returning data for request ID: $requestID")
-			callback(data, null)
-		} else {
-			Log.w(
-				"CustomWebViewClient",
-				"No callback found for request ID: $requestID"
-			)
-		}
-	}
-}
-
-fun wrapScript(
-	reqID: String,
-	code: String,
-	inputState: JsonObject
-): String {
-	val stateVar = "$"
-	val retVar = "_\$ret"
-	val errField = "\$error"
-	val escapedReqID = '"' + reqID.replace("\"", "\\\"") + '"'
-	return """
-(async ($stateVar) => {
-	var $retVar = $stateVar;
-	try {
-		$retVar = await (async () => {
-		$code
-	})();
-	} catch (e) {
-		$retVar.$errField = "Error in script: " + e;
-	}
-	${"\$android"}.onReturn(JSON.stringify($retVar || $stateVar), $escapedReqID)
-})(${inputState}, $escapedReqID)
-	"""
-}
-
 @Composable
 fun ComposableWebView(
 	modifier: Modifier = Modifier,
@@ -125,7 +70,7 @@ fun ComposableWebView(
 		WebControlProvider.connect()
 
 		while (true) {
-			// Pop from the webcontrolprovider
+			// Pop from the WebControlProvider
 			val t = WebControlProvider.popTask()
 
 			webview?.let { wv ->
@@ -161,20 +106,6 @@ fun ComposableWebView(
 						t.callback?.invoke("OK", null)
 					}
 
-					is WebTaskEvalJS -> {
-						val reqID = ReqManager.issueJSReturnID(t.callback ?: { _, _ -> })
-						val wrappedScript = wrapScript(
-							reqID,
-							tt.script,
-							tt.state
-						)
-
-						Log.d("ComposableWebView", "Start eval js[$reqID]: ${tt.script}")
-						wv.evaluateJavascript(wrappedScript) {
-							Log.d("ComposableWebView", "End eval js[$reqID]: $it")
-						}
-					}
-
 					is WebTaskGetURL -> {
 						val currentUrl = wv.url ?: ""
 						t.callback?.invoke(currentUrl, null)
@@ -194,10 +125,6 @@ fun ComposableWebView(
 			GlobalVM.hdUserAgent = wv.settings.userAgentString
 
 			wv.webViewClient = cli
-			wv.addJavascriptInterface(
-				ReqManager,
-				"\$android"
-			)
 
 			wv.settings.apply {
 				javaScriptEnabled = true
@@ -231,11 +158,10 @@ fun ComposableWebView(
 				"""
 					// Get the title of the page
 					document.title;
-				""".trimIndent(),
-				{ result ->
-					Toast.makeText(context, "Loaded: $result", Toast.LENGTH_LONG).show()
-				}
-			)
+				""".trimIndent()
+			) { result ->
+				Toast.makeText(context, "Loaded: $result", Toast.LENGTH_LONG).show()
+			}
 		},
 		modifier = modifier
 	)

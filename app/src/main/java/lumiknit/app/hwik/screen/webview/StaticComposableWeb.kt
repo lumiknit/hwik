@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.screen.webcontainer
+package lumiknit.app.hwik.screen.webview
 
 import android.view.ViewGroup
 import android.webkit.WebView

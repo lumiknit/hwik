@@ -1,10 +1,7 @@
-package lumiknit.app.hwik.screen.webcontainer
+package lumiknit.app.hwik.screen.webview
 
-import android.util.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.trySendBlocking
-import kotlinx.serialization.json.JsonObject
-import lumiknit.app.hwik.core.sanitizeFetchURL
 
 // WebTaskType is a kind of task.
 
@@ -15,7 +12,6 @@ class WebTaskNavBack() : WebTaskType()
 class WebTaskNavForward() : WebTaskType()
 class WebTaskNavTo(val url: String) : WebTaskType()
 class WebTaskRefresh() : WebTaskType()
-class WebTaskEvalJS(val script: String, val state: JsonObject) : WebTaskType()
 
 /**
  * WebTask is a data class for webview task queue item.
@@ -139,55 +135,5 @@ object WebController {
 			})
 		WebControlCore.taskChannel.send(task)
 		return waitChannel.receive()
-	}
-
-	suspend fun runJS(
-		script: String,
-		state: JsonObject = JsonObject(emptyMap())
-	): TaskResult {
-		Log.d("WebCtrl:runJS", "Running script: $script")
-		return addTaskAsync(
-			WebTaskEvalJS(script, state)
-		)
-	}
-
-	suspend fun reset() {
-		goToAndWait("about:blank")
-	}
-
-	/**
-	 * Go to a specific URL and wait for the page to load.
-	 */
-	suspend fun goToAndWait(
-		url: String
-	) {
-		val url = sanitizeFetchURL(url)
-		Log.d("WebCtrl:locationAndWait", "Navigating to $url")
-
-		// Prepare the task to navigate to the URL
-		val waitChannel = Channel<Unit>(1)
-		val callbacks = object : WebControlCallbacks() {
-			override fun onPageFinished(url: String) {
-				Log.d("WebCtrl:locationAndWait", "Page loaded: $url")
-				waitChannel.trySendBlocking(Unit)
-			}
-		}
-		addCallback(callbacks)
-
-		// Navigate to the URL
-		val result = addTaskAsync(
-			WebTaskNavTo(url),
-		)
-		if (result.error == null) {
-			Log.d("WebCtrl:locationAndWait", "Waiting for page to load...")
-			waitChannel.receive()
-			Log.d("WebCtrl:locationAndWait", "Waiting for page to load done")
-		}
-
-		removeCallback(callbacks)
-
-		if (result.error != null) {
-			throw Exception("Error navigating to $url: ${result.error}")
-		}
 	}
 }

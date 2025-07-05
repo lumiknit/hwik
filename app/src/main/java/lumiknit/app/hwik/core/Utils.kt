@@ -1,5 +1,7 @@
 package lumiknit.app.hwik.core
 
+import java.util.UUID
+
 private val generousURLRegex = Regex(
 	"""^([A-Za-z0-9]+:/*)?([^/]+)(/.*)?$""",
 )
@@ -18,4 +20,8 @@ fun sanitizeFetchURL(maybeURL: String): String {
 		return "https://$trimmed"
 	}
 	return trimmed
+}
+
+fun genUID(): String {
+	return UUID.randomUUID().toString()
 }

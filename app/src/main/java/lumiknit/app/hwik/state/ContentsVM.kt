@@ -20,7 +20,7 @@ import lumiknit.app.hwik.core.Article
 import lumiknit.app.hwik.core.PSDatabase
 import lumiknit.app.hwik.core.PSSourceEntity
 import lumiknit.app.hwik.core.PickerScript
-import lumiknit.app.hwik.screen.webcontainer.WebScriptRunner
+import lumiknit.app.hwik.screen.webworker.WebContext
 
 val PAGE_PREFETCH = 5
 val LOOP_DELAY = 100L
@@ -102,7 +102,7 @@ object ContentsVM : ViewModel() {
 		Log.i("ContentsVM", "Fetching list using script: ${script.id}")
 
 		val result =
-			WebScriptRunner.runScriptSteps(
+			WebContext.runScript(
 				script.articleList.steps,
 				JsonObject(emptyMap())
 			)
@@ -145,7 +145,7 @@ object ContentsVM : ViewModel() {
 
 		val script = picker.script
 		val result =
-			WebScriptRunner.runScriptSteps(
+			WebContext.runScript(
 				script.articleContent.steps,
 				JsonObject(mapOf("url" to JsonPrimitive(url)))
 			)
@@ -234,6 +234,7 @@ object ContentsVM : ViewModel() {
 	var paused = false
 
 	fun startScrapLoop(scope: CoroutineScope) {
+		return
 		if (job != null && job!!.isActive) {
 			Log.w("ContentsVM", "Scrap loop is already running")
 			return

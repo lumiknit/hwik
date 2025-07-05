@@ -56,7 +56,7 @@ import lumiknit.app.hwik.core.TextSpan
 import lumiknit.app.hwik.core.TitleDiv
 import lumiknit.app.hwik.core.VideoDiv
 import lumiknit.app.hwik.core.WebImageDiv
-import lumiknit.app.hwik.screen.webcontainer.StaticComposableWeb
+import lumiknit.app.hwik.screen.webview.StaticComposableWeb
 import lumiknit.app.hwik.state.GlobalVM
 import lumiknit.app.hwik.ui.theme.CustomColorsPalette
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
