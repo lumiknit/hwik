@@ -1,5 +1,6 @@
 package lumiknit.app.hwik.screen.sources
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,6 +94,7 @@ fun SourceEditScreen(
 			}
 
 			fetchingContents = true
+			Log.i("SourceEditScreen", "Fetching script from URL: $url")
 			val result = fetchPickerScript(url)
 			fetchedFromURL = true
 			fetchingContents = false
@@ -210,7 +211,7 @@ fun SourceEditScreen(
 			Spacer(modifier = Modifier.height(16.dp))
 
 			ListSectionTitle("Script Code")
-			TextField(
+			OutlinedTextField(
 				value = rawScript,
 				onValueChange = {
 					rawScript = it

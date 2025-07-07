@@ -19,9 +19,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,7 +54,7 @@ fun PSEdit(
 	ListSectionTitle("Meta")
 
 	// ID
-	TextField(
+	OutlinedTextField(
 		value = (value.id),
 		onValueChange = {
 			onValueChange(
@@ -69,7 +69,7 @@ fun PSEdit(
 	)
 
 	// Meta.name
-	TextField(
+	OutlinedTextField(
 		value = (value.meta.name ?: ""),
 		onValueChange = {
 			onValueChange(
@@ -84,7 +84,7 @@ fun PSEdit(
 	)
 
 	// Meta.version
-	TextField(
+	OutlinedTextField(
 		value = (value.meta.version ?: ""),
 		onValueChange = {
 			onValueChange(
@@ -99,7 +99,7 @@ fun PSEdit(
 	)
 
 	// Meta.author
-	TextField(
+	OutlinedTextField(
 		value = (value.meta.author ?: ""),
 		onValueChange = {
 			onValueChange(
@@ -114,7 +114,7 @@ fun PSEdit(
 	)
 
 	// Meta.description
-	TextField(
+	OutlinedTextField(
 		value = (value.meta.description ?: ""),
 		onValueChange = {
 			onValueChange(
@@ -127,7 +127,7 @@ fun PSEdit(
 		label = { Text("Description") }
 	)
 
-	TextField(
+	OutlinedTextField(
 		value = value.urlRE,
 		onValueChange = { onValueChange(value.copy(urlRE = it)) },
 		singleLine = true,
@@ -270,7 +270,7 @@ private fun EditProcessStep(
 				}
 			}
 
-			TextField(
+			OutlinedTextField(
 				value = step.code,
 				onValueChange = { onStepChange(step.copy(code = it)) },
 				label = { Text("JavaScript Code") },

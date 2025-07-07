@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
 				GlobalVM
 				GlobalVM.setUpImageLoader(context)
 				ContentsVM.loadScriptsFromDB(context)
-				ContentsVM.startScrapLoop(coroutineScope)
 			}
 
 			HwikTheme {

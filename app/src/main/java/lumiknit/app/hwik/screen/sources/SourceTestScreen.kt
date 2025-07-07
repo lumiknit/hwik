@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,6 +41,10 @@ import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PickerProcess
 import lumiknit.app.hwik.screen.webworker.WebContext
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
+
+val prettyJson = Json {
+	prettyPrint = true
+}
 
 @Composable
 fun SourceTestScreen(
@@ -170,35 +176,56 @@ fun SourceTestScreen(
 
 			if (result?.stepResults != null) {
 				val steps = result?.stepResults ?: emptyList()
-				Text("Results:")
+				ListSectionTitle("Result")
 				// Show index and monospace text for each result
 				for ((index, res) in steps.withIndex()) {
-					ListSectionTitle("Step ${index + 1}.")
+					HorizontalDivider(
+						modifier = Modifier.padding(vertical = 8.dp),
+						color = MaterialTheme.colorScheme.onSurface,
+						thickness = 1.dp
+					)
+
+					ListSectionTitle("Step ${index + 1} Code")
 
 					// Show original code
 					val code = """
 // --- Code
 ${process?.steps[index]?.code}
-// --- Result
 					""".trimIndent()
-					Text(
-						text = code,
-						style = TextStyle(
-							fontFamily = FontFamily.Monospace,
+					SelectionContainer {
+						Text(
+							text = code,
+							style = TextStyle(
+								fontFamily = FontFamily.Monospace,
+							)
 						)
-					)
+					}
+
+					ListSectionTitle("Step ${index + 1} Raw")
 
 					Text(
 						text = """
-							// --- RAW
 							${res.raw}
-							// --- Next State
-							${Json.encodeToString(JsonObject.serializer(), res.state)}
 						""".trimIndent(),
 						style = TextStyle(
 							fontFamily = FontFamily.Monospace,
 						)
 					)
+
+					ListSectionTitle("Step ${index + 1} Next State")
+
+					SelectionContainer {
+						Text(
+							text = """
+							${
+								prettyJson.encodeToString(JsonObject.serializer(), res.state)
+							}
+						""".trimIndent(),
+							style = TextStyle(
+								fontFamily = FontFamily.Monospace,
+							)
+						)
+					}
 				}
 			}
 		}

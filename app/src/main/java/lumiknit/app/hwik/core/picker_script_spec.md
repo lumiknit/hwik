@@ -102,11 +102,11 @@ between processes.
 * `$urls: string[]`: The list of listed URLs. The content of this field becomes
   the final output of the process.
 * **`articleContent` Process**
-* `$url: string`: The input value for the article URL.
+* `url: string`: The input value for the article URL.
 * `$article: JSONObject`: The output value for the article content, which is a
   JSON object.
 * **`search` Process**
-* `$query: string`: The input query string.
+* `query: string`: The input query string.
 * `$urls: string[]`: The output URLs of the search result.
 
 ### Helpers

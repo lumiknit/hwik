@@ -6,6 +6,11 @@ import kotlinx.serialization.Serializable
 object RouteMain
 
 @Serializable
+data class RouteSearched(
+	val keyword: String
+)
+
+@Serializable
 object RouteWebViewScreen
 
 @Serializable
@@ -26,12 +31,13 @@ data class RouteSourceTest(
 @Serializable
 object RoutePreferences
 
-open class NavCallbacks {
-	open fun onRouteMain() {}
-	open fun onRouteWebShowView() {}
-	open fun onRouteSourceList() {}
-	open fun onRouteSourceEdit(sourceID: Long?) {}
-	open fun onRouteSourceTest(process: String) {}
-	open fun onRoutePreferences() {}
-	open fun onBack() {}
+abstract class NavCallbacks {
+	abstract fun onRouteMain()
+	abstract fun onRouteSearched(keyword: String)
+	abstract fun onRouteWebShowView()
+	abstract fun onRouteSourceList()
+	abstract fun onRouteSourceEdit(sourceID: Long?)
+	abstract fun onRouteSourceTest(process: String)
+	abstract fun onRoutePreferences()
+	abstract fun onBack()
 }

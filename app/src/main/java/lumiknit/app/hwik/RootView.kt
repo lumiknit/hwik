@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import lumiknit.app.hwik.screen.main.MainScreen
 import lumiknit.app.hwik.screen.prefs.PreferencesView
+import lumiknit.app.hwik.screen.searched.SearchedScreen
 import lumiknit.app.hwik.screen.sources.SourceEditScreen
 import lumiknit.app.hwik.screen.sources.SourceListScreen
 import lumiknit.app.hwik.screen.sources.SourceTestScreen
@@ -31,6 +32,10 @@ fun RootView() {
 				// Clear the back stack to prevent going back to the previous screen
 				popUpTo(RouteMain) { inclusive = true }
 			}
+		}
+
+		override fun onRouteSearched(keyword: String) {
+			navController.navigate(RouteSearched(keyword))
 		}
 
 		override fun onRouteWebShowView() {
@@ -96,6 +101,13 @@ fun RootView() {
 			composable<RouteMain> {
 				MainScreen(
 					navCallbacks = navCallbacks,
+				)
+			}
+			composable<RouteSearched> { v ->
+				val e: RouteSearched = v.toRoute()
+				SearchedScreen(
+					navCallbacks = navCallbacks,
+					searchKeyword = e.keyword,
 				)
 			}
 			composable<RouteWebViewScreen> {

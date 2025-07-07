@@ -1,7 +1,9 @@
 package lumiknit.app.hwik.screen.webworker
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.channels.Channel
@@ -9,7 +11,16 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.JsonObject
 import lumiknit.app.hwik.core.PickerStep
 
+data class TaskLog(
+	val status: String,
+	val kind: String,
+	val message: String,
+)
+
+
 object WebContext : ViewModel() {
+	var taskLogs = mutableStateListOf<TaskLog>()
+
 	// Script Helpers
 	data class StepResult(
 		val index: Int,
@@ -44,7 +55,8 @@ object WebContext : ViewModel() {
 		inputs: JsonObject = JsonObject(emptyMap()),
 		onStepDone: (Int, StepResult) -> Unit = { _, _ -> },
 	): RunResult {
-		return suspendCancellableCoroutine { continuation ->
+		val result = suspendCancellableCoroutine { continuation ->
+			Log.i("WebContext", "runScript: creating webtask")
 			val task = Task(
 				steps = steps,
 				inputs = inputs,
@@ -55,7 +67,11 @@ object WebContext : ViewModel() {
 					}
 				}
 			)
+			Log.i("WebContext", "runScript: sent webtask")
 			taskChannel.trySend(task)
 		}
+		Log.i("WebContext", "runScript: webtask done")
+
+		return result
 	}
 }

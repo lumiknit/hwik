@@ -1,4 +1,4 @@
-package lumiknit.app.hwik.screen.main
+package lumiknit.app.hwik.components.articlep
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable

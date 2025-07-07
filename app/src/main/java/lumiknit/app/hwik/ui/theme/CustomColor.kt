@@ -12,6 +12,8 @@ data class CustomColorsPalette(
 	val background: Color = Color.Unspecified,
 	val onBackground: Color = Color.Unspecified,
 	val linkText: Color = Color.Unspecified,
+
+	val inputBackground: Color = Color.Unspecified,
 )
 
 val OnLightCustomColorsPalette = CustomColorsPalette(
@@ -20,6 +22,7 @@ val OnLightCustomColorsPalette = CustomColorsPalette(
 	background = Color(0xFFFFFFFF),
 	onBackground = Color(0xFF121213),
 	linkText = Color(0xFF2398EC),
+	inputBackground = Color(0xFFF8F8F8),
 )
 
 val OnDarkCustomColorsPalette = CustomColorsPalette(
@@ -28,6 +31,7 @@ val OnDarkCustomColorsPalette = CustomColorsPalette(
 	background = Color(0xFF000000),
 	onBackground = Color(0xFFF8F8F8),
 	linkText = Color(0xFFFFAC4D),
+	inputBackground = Color(0xFF3E3E41),
 )
 
 val LocalCustomColorsPalette =

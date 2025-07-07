@@ -96,10 +96,22 @@ object ContentsVM : ViewModel() {
 			return false
 		}
 
-		val picker = pickers[nextListFetch]
-		val script = picker.script
+		val pickerIdx = nextListFetch
 		nextListFetch = (nextListFetch + 1) % pickers.size
-		Log.i("ContentsVM", "Fetching list using script: ${script.id}")
+
+		val picker = pickers[pickerIdx]
+		val script = picker.script
+		Log.i(
+			"ContentsVM",
+			"Fetching list using script: [${pickerIdx}] ${script.id}"
+		)
+		if (script.articleList.steps.isEmpty()) {
+			Log.w(
+				"ContentsVM",
+				"No steps defined for article list in script: ${script.id}"
+			)
+			return false
+		}
 
 		val result =
 			WebContext.runScript(
@@ -193,7 +205,7 @@ object ContentsVM : ViewModel() {
 	suspend fun step(
 		contentsEnough: Boolean = false
 	) {
-
+		Log.d("ContentsVM", "Step called with contentsEnough: $contentsEnough")
 		// First of all, check if there are some requests
 		if (requests.isNotEmpty()) {
 			Log.i("ContentsVM", "Handling search request from queue")
@@ -234,7 +246,6 @@ object ContentsVM : ViewModel() {
 	var paused = false
 
 	fun startScrapLoop(scope: CoroutineScope) {
-		return
 		if (job != null && job!!.isActive) {
 			Log.w("ContentsVM", "Scrap loop is already running")
 			return

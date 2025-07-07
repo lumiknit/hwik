@@ -108,10 +108,10 @@ fun WebWorker(
 	val cli = remember {
 		object : WebViewClient() {
 			override fun shouldOverrideUrlLoading(
-				view: WebView,
+				view: WebView?,
 				request: WebResourceRequest?
 			): Boolean {
-				return false // Return true to indicate that we handled the URL loading
+				return false
 			}
 
 			override fun onPageStarted(
@@ -126,15 +126,24 @@ fun WebWorker(
 			override fun onPageFinished(view: WebView?, url: String) {
 				super.onPageFinished(view, url)
 				Log.d("WebWorker", "Page finished: $url")
-				pageLoadedChannel.trySend(Unit)
+				val res = pageLoadedChannel.trySend(Unit)
+				if (!res.isSuccess) {
+					Log.w("WebWorker", "Page loaded channel is full, skipping send")
+				} else {
+					Log.d("WebWorker", "Page loaded channel sent successfully")
+				}
 			}
 		}
 	}
 
 	suspend fun goToAndWait(url: String = "about:blank") {
+		if (webview == null) {
+			throw IllegalStateException("WebView is not initialized")
+		}
 		Log.d("WebWorker:goToAndWait", "Going to URL: $url")
-		webview?.loadUrl(url)
+		webview!!.loadUrl(url)
 		pageLoadedChannel.receive()
+		Log.d("WebWorker:goToAndWait", "Page loaded: $url")
 	}
 
 	suspend fun runJS(
@@ -160,7 +169,9 @@ fun WebWorker(
 	}
 
 	val mainStep = suspend {
+		Log.d("WebWorker", "mainStep: receiving webtask")
 		val task = WebContext.taskChannel.receive()
+		Log.d("WebWorker", "mainStep: received webtask")
 
 		val results = mutableListOf<WebContext.StepResult>()
 		var error: String? = null
@@ -171,12 +182,12 @@ fun WebWorker(
 		var state = task.inputs
 
 		for ((idx, step) in task.steps.withIndex()) {
-			Log.d("WebCtrl:runScriptSteps", "Step $idx: ${step.code}")
+			Log.d("WebWorker:runScriptSteps", "Step $idx: ${step.code}")
 
 			if (idx > 0) {
 				state = filterTemporaryFields(state)
 				Log.d(
-					"WebCtrl:runScriptSteps",
+					"WebWorker:runScriptSteps",
 					"State filtered (remove temp fields): $state"
 				)
 			}
@@ -189,7 +200,7 @@ fun WebWorker(
 						"Error executing step $idx, RunError: ${jsError}"
 					break
 				}
-				Log.d("WebCtrl:runScriptSteps", "Step $idx result: ${jsResult}")
+				Log.d("WebWorker:runScriptSteps", "Step $idx result: ${jsResult}")
 
 				state = buildJsonObject {
 					state.forEach { (key, value) ->
@@ -202,7 +213,7 @@ fun WebWorker(
 						}
 					} catch (e: Exception) {
 						Log.e(
-							"WebCtrl:runScriptSteps",
+							"WebWorker:runScriptSteps",
 							"Error parsing JSON result from step $idx: ${e.message}"
 						)
 					}
@@ -216,9 +227,9 @@ fun WebWorker(
 						break
 					}
 					val href = field.jsonPrimitive.content
-					Log.d("WebCtrl:runScriptSteps", "Step $idx href: $href")
+					Log.d("WebWorker:runScriptSteps", "Step $idx href: $href")
 					goToAndWait(href)
-					Log.d("WebCtrl:runScriptSteps", "Step $idx href done")
+					Log.d("WebWorker:runScriptSteps", "Step $idx href done")
 				}
 
 				val sr = WebContext.StepResult(
@@ -234,7 +245,7 @@ fun WebWorker(
 			}
 		}
 		Log.d(
-			"WebCtrl:runScriptSteps",
+			"WebWorker:runScriptSteps",
 			"Finished running steps, outputs: $results, error: $error"
 		)
 
@@ -281,6 +292,8 @@ fun WebWorker(
 		factory = { context ->
 			val wv = WebView(context)
 
+			wv.webViewClient = cli
+
 			GlobalVM.hdUserAgent = wv.settings.userAgentString
 
 			wv.addJavascriptInterface(
@@ -312,17 +325,6 @@ fun WebWorker(
 			webview = wv
 
 			wv
-		},
-		update = { wv ->
-			wv.evaluateJavascript(
-				"""
-					// Get the title of the page
-					document.title;
-				""".trimIndent(),
-				{ result ->
-					Toast.makeText(context, "Loaded: $result", Toast.LENGTH_LONG).show()
-				}
-			)
 		},
 		modifier = modifier
 	)
