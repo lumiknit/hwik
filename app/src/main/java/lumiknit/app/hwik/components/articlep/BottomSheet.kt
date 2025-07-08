@@ -43,7 +43,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.R
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.transparentTextFieldColors
@@ -52,7 +52,7 @@ import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
 private fun Buttons(
-	state: ArticlePageState,
+	state: ArticlePageState?,
 	menuItems: List<MenuItem>,
 ) {
 	val btnModifier = Modifier
@@ -61,33 +61,35 @@ private fun Buttons(
 	var moreExpanded by remember { mutableStateOf(false) }
 
 	Row {
-		TextButton(
-			modifier = btnModifier,
-			onClick = {
-				state.onPrevPage()
-			},
-			enabled = true,
-		) {
-			Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Prev")
-		}
+		if (state != null) {
+			TextButton(
+				modifier = btnModifier,
+				onClick = {
+					state.onPrevPage()
+				},
+				enabled = true,
+			) {
+				Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Prev")
+			}
 
-		TextButton(
-			modifier = btnModifier,
-			onClick = {
-				state.onNextPage()
-			},
-			enabled = true,
-		) {
-			Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Next")
-		}
+			TextButton(
+				modifier = btnModifier,
+				onClick = {
+					state.onNextPage()
+				},
+				enabled = true,
+			) {
+				Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Next")
+			}
 
-		TextButton(
-			modifier = btnModifier,
-			onClick = {
-			},
-			enabled = true,
-		) {
-			Icon(Icons.AutoMirrored.Default.List, contentDescription = "List")
+			TextButton(
+				modifier = btnModifier,
+				onClick = {
+				},
+				enabled = true,
+			) {
+				Icon(Icons.AutoMirrored.Default.List, contentDescription = "List")
+			}
 		}
 
 		Spacer(modifier = Modifier.weight(1f))
@@ -120,9 +122,7 @@ private fun Buttons(
 }
 
 @Composable
-private fun SearchView(
-	navCallbacks: NavCallbacks
-) {
+private fun SearchView() {
 	val keyboardController = LocalSoftwareKeyboardController.current
 	var searchText by remember { mutableStateOf("") }
 
@@ -166,7 +166,7 @@ private fun SearchView(
 			keyboardActions = KeyboardActions(
 				onSearch = {
 					keyboardController?.hide()
-					navCallbacks.onRouteSearched(searchText)
+					Navigator.go(Navigator.RouteSearched(searchText))
 				}
 			)
 		)
@@ -177,8 +177,7 @@ private fun SearchView(
 @Composable
 fun BottomSheet(
 	modifier: Modifier = Modifier,
-	navCallbacks: NavCallbacks,
-	state: ArticlePageState,
+	state: ArticlePageState?,
 ) {
 
 	var expandSheet by remember { mutableStateOf(false) }
@@ -187,15 +186,15 @@ fun BottomSheet(
 		MenuItem(
 			title = "${stringResource(R.string.dd_menu_sources)}(${ContentsVM.pickers.size})",
 			onClick = {
-				navCallbacks.onRouteSourceList()
+				Navigator.go(Navigator.RouteSourceList)
 			}),
 		MenuItem(title = stringResource(R.string.dd_menu_webview), onClick = {
-			navCallbacks.onRouteWebShowView()
+			Navigator.go(Navigator.RouteWebViewScreen)
 		}),
 		MenuItem(
 			title = stringResource(R.string.dd_menu_preferences),
 			onClick = {
-				navCallbacks.onRoutePreferences()
+				Navigator.go(Navigator.RoutePreferences)
 			}),
 	)
 
@@ -221,7 +220,7 @@ fun BottomSheet(
 		) {
 			Column {
 				Buttons(state = state, menuItems)
-				SearchView(navCallbacks)
+				SearchView()
 			}
 		}
 	}

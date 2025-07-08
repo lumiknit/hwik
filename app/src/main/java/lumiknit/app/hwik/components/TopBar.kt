@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 data class MenuItem(
@@ -32,7 +33,7 @@ data class MenuItem(
 fun TopBar(
 	title: String,
 	menuItems: List<MenuItem>? = null,
-	onBack: (() -> Unit)? = null,
+	onBack: Boolean = false,
 	onDone: (() -> Unit)? = null,
 ) {
 	var moreExpanded by remember { mutableStateOf(false) }
@@ -56,12 +57,15 @@ fun TopBar(
 			)
 		},
 		navigationIcon = {
-			if (onBack == null) return@TopAppBar
-			IconButton(onClick = onBack) {
-				Icon(
-					imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-					contentDescription = "Localized description"
-				)
+			if (onBack) {
+				IconButton(onClick = {
+					Navigator.go(Navigator.RouteBack)
+				}) {
+					Icon(
+						imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+						contentDescription = "Localized description"
+					)
+				}
 			}
 		},
 		actions = {

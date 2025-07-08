@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.coroutines.delay
 import lumiknit.app.hwik.screen.main.MainScreen
 import lumiknit.app.hwik.screen.prefs.PreferencesView
 import lumiknit.app.hwik.screen.searched.SearchedScreen
@@ -26,40 +28,22 @@ import lumiknit.app.hwik.screen.webworker.WebWorkerSet
 fun RootView() {
 	val navController = rememberNavController()
 
-	var navCallbacks = object : NavCallbacks() {
-		override fun onRouteMain() {
-			navController.navigate(RouteMain) {
-				// Clear the back stack to prevent going back to the previous screen
-				popUpTo(RouteMain) { inclusive = true }
+	// Handle navigation
+
+	LaunchedEffect(Unit) {
+		while (true) {
+			delay(100)
+			val received = Navigator.channel.receive()
+			when (received) {
+				is Navigator.RouteBack -> navController.navigateUp()
+
+				is Navigator.RouteMain -> navController.navigate(Navigator.RouteMain) {
+					// Clear the back stack to prevent going back to the previous screen
+					popUpTo(Navigator.RouteMain) { inclusive = true }
+				}
+
+				else -> navController.navigate(received)
 			}
-		}
-
-		override fun onRouteSearched(keyword: String) {
-			navController.navigate(RouteSearched(keyword))
-		}
-
-		override fun onRouteWebShowView() {
-			navController.navigate(RouteWebViewScreen)
-		}
-
-		override fun onRouteSourceList() {
-			navController.navigate(RouteSourceList)
-		}
-
-		override fun onRouteSourceEdit(sourceID: Long?) {
-			navController.navigate(RouteSourceEdit(sourceID))
-		}
-
-		override fun onRouteSourceTest(process: String) {
-			navController.navigate(RouteSourceTest(process))
-		}
-
-		override fun onRoutePreferences() {
-			navController.navigate(RoutePreferences)
-		}
-
-		override fun onBack() {
-			navController.navigateUp()
 		}
 	}
 
@@ -72,7 +56,7 @@ fun RootView() {
 	) {
 		NavHost(
 			navController = navController,
-			startDestination = RouteMain,
+			startDestination = Navigator.RouteMain,
 			enterTransition = {
 				// Slide into
 				slideIntoContainer(
@@ -98,43 +82,36 @@ fun RootView() {
 				)
 			}
 		) {
-			composable<RouteMain> {
-				MainScreen(
-					navCallbacks = navCallbacks,
-				)
+			composable<Navigator.RouteMain> {
+				MainScreen()
 			}
-			composable<RouteSearched> { v ->
-				val e: RouteSearched = v.toRoute()
+			composable<Navigator.RouteSearched> { v ->
+				val e: Navigator.RouteSearched = v.toRoute()
 				SearchedScreen(
-					navCallbacks = navCallbacks,
 					searchKeyword = e.keyword,
 				)
 			}
-			composable<RouteWebViewScreen> {
-				WebShowScreen(modifier = Modifier, navCallbacks)
+			composable<Navigator.RouteWebViewScreen> {
+				WebShowScreen(modifier = Modifier)
 			}
-			composable<RouteSourceList> {
+			composable<Navigator.RouteSourceList> {
 				SourceListScreen(
-					navCallbacks = navCallbacks,
 				)
 			}
-			composable<RouteSourceEdit> { v ->
-				val e: RouteSourceEdit = v.toRoute()
+			composable<Navigator.RouteSourceEdit> { v ->
+				val e: Navigator.RouteSourceEdit = v.toRoute()
 				SourceEditScreen(
-					navCallbacks = navCallbacks,
 					sourceID = e.sourceID,
 				)
 			}
-			composable<RouteSourceTest> { v ->
-				val e: RouteSourceTest = v.toRoute()
+			composable<Navigator.RouteSourceTest> { v ->
+				val e: Navigator.RouteSourceTest = v.toRoute()
 				SourceTestScreen(
-					navCallbacks = navCallbacks,
 					processJSON = e.processStr,
 				)
 			}
-			composable<RoutePreferences> {
+			composable<Navigator.RoutePreferences> {
 				PreferencesView(
-					navCallbacks = navCallbacks,
 				)
 			}
 		}

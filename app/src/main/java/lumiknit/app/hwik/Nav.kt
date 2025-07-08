@@ -1,43 +1,47 @@
 package lumiknit.app.hwik
 
+import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.Serializable
 
-@Serializable
-object RouteMain
+object Navigator {
+	@Serializable
+	sealed class RouteObj
 
-@Serializable
-data class RouteSearched(
-	val keyword: String
-)
+	@Serializable
+	object RouteBack : RouteObj()
 
-@Serializable
-object RouteWebViewScreen
+	@Serializable
+	object RouteMain : RouteObj()
 
-@Serializable
-object RouteSourceList
+	@Serializable
+	data class RouteSearched(
+		val keyword: String
+	) : RouteObj()
 
-@Serializable
-data class RouteSourceEdit(
-	// If null, it means to create a new source.
-	val sourceID: Long? = null,
-)
+	@Serializable
+	object RouteWebViewScreen : RouteObj()
 
-@Serializable
-data class RouteSourceTest(
-	// If null, it means to create a new source.
-	val processStr: String
-)
+	@Serializable
+	object RouteSourceList : RouteObj()
 
-@Serializable
-object RoutePreferences
+	@Serializable
+	data class RouteSourceEdit(
+		// If null, it means to create a new source.
+		val sourceID: Long? = null,
+	) : RouteObj()
 
-abstract class NavCallbacks {
-	abstract fun onRouteMain()
-	abstract fun onRouteSearched(keyword: String)
-	abstract fun onRouteWebShowView()
-	abstract fun onRouteSourceList()
-	abstract fun onRouteSourceEdit(sourceID: Long?)
-	abstract fun onRouteSourceTest(process: String)
-	abstract fun onRoutePreferences()
-	abstract fun onBack()
+	@Serializable
+	data class RouteSourceTest(
+		// If null, it means to create a new source.
+		val processStr: String
+	) : RouteObj()
+
+	@Serializable
+	object RoutePreferences : RouteObj()
+
+	val channel = Channel<RouteObj>(capacity = 4)
+
+	fun go(route: RouteObj) {
+		channel.trySend(route)
+	}
 }

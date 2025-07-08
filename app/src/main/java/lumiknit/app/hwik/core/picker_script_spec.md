@@ -107,7 +107,11 @@ between processes.
   JSON object.
 * **`search` Process**
 * `query: string`: The input query string.
-* `$urls: string[]`: The output URLs of the search result.
+* `$items: Item[]`: The output URLs of the search result.
+    - Item
+        - `url: string`
+        - `title: string`
+        - `description: string`
 
 ### Helpers
 

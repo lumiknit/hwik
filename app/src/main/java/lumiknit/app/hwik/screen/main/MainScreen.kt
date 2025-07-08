@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.articlep.ArticlePageState
 import lumiknit.app.hwik.components.articlep.ArticlePager
 import lumiknit.app.hwik.components.articlep.BottomSheet
@@ -22,9 +21,7 @@ import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
  */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun MainScreen(
-	navCallbacks: NavCallbacks,
-) {
+fun MainScreen() {
 	val coroutineScope = rememberCoroutineScope()
 	val state = viewModel<ArticlePageState>()
 
@@ -50,7 +47,6 @@ fun MainScreen(
 				modifier = Modifier
 					.align(Alignment.BottomCenter)
 					.padding(32.dp),
-				navCallbacks = navCallbacks,
 				state = state,
 			)
 		}

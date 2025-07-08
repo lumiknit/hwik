@@ -35,7 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PSDatabase
@@ -48,7 +48,6 @@ import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
 
 @Composable
 fun SourceEditScreen(
-	navCallbacks: NavCallbacks,
 	sourceID: Long? = null // Pass originId if editing an existing source, null for new
 ) {
 	val context = LocalContext.current
@@ -71,7 +70,7 @@ fun SourceEditScreen(
 			if (origin == null) {
 				errorMsg = "Source not found"
 				Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
-				navCallbacks.onBack() // Navigate back if source not found
+				Navigator.go(Navigator.RouteBack)
 				return@LaunchedEffect
 			}
 			url = origin.url ?: ""
@@ -146,7 +145,7 @@ fun SourceEditScreen(
 				}
 				Toast.makeText(context, "Source saved successfully", Toast.LENGTH_SHORT)
 					.show()
-				navCallbacks.onBack() // Navigate back after saving
+				Navigator.go(Navigator.RouteBack)
 			} else {
 				Toast.makeText(context, "Failed to save source", Toast.LENGTH_SHORT)
 					.show()
@@ -159,7 +158,7 @@ fun SourceEditScreen(
 		topBar = {
 			TopBar(
 				title = if (sourceID == null) "New Source" else "Edit Source",
-				onBack = { navCallbacks.onBack() },
+				onBack = true,
 				onDone = handleSave,
 			)
 		},
@@ -241,7 +240,6 @@ fun SourceEditScreen(
 			ListSectionTitle("Script Edit")
 
 			PSEdit(
-				navCallbacks = navCallbacks,
 				value = script,
 				onValueChange = {
 					script = it

@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.components.list.ListSectionTitle
@@ -48,7 +48,6 @@ val prettyJson = Json {
 
 @Composable
 fun SourceTestScreen(
-	navCallbacks: NavCallbacks,
 	processJSON: String
 ) {
 	val context = LocalContext.current
@@ -108,7 +107,7 @@ fun SourceTestScreen(
 			process = PickerProcess.fromJSON(processJSON)
 		} catch (e: Exception) {
 			e.printStackTrace()
-			navCallbacks.onBack()
+			Navigator.go(Navigator.RouteBack)
 		}
 	}
 
@@ -116,12 +115,10 @@ fun SourceTestScreen(
 		topBar = {
 			TopBar(
 				title = "Sources",
-				onBack = {
-					navCallbacks.onBack()
-				},
+				onBack = true,
 				menuItems = listOf(
 					MenuItem(title = "Source WebView", onClick = {
-						navCallbacks.onRouteWebShowView()
+						Navigator.go(Navigator.RouteWebViewScreen)
 					}),
 				)
 			)

@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onKeyEvent
-import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.core.sanitizeFetchURL
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
@@ -34,7 +33,6 @@ import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 @Composable
 fun WebShowScreen(
 	modifier: Modifier = Modifier,
-	navCallbacks: NavCallbacks,
 	initURL: String = "about:blank",
 ) {
 	var url by remember { mutableStateOf(initURL) }
@@ -59,7 +57,7 @@ fun WebShowScreen(
 		topBar = {
 			TopBar(
 				title = "Web",
-				onBack = { navCallbacks.onBack() },
+				onBack = true,
 			)
 		},
 		modifier = modifier

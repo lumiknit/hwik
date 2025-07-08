@@ -2,26 +2,27 @@ package lumiknit.app.hwik.screen.searched
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
-import lumiknit.app.hwik.components.articlep.ArticlePageState
-import lumiknit.app.hwik.components.articlep.ArticlePager
 import lumiknit.app.hwik.components.articlep.BottomSheet
 import lumiknit.app.hwik.core.PickerProcess
 import lumiknit.app.hwik.screen.webworker.WebContext
@@ -29,10 +30,73 @@ import lumiknit.app.hwik.state.ContentsVM
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 
+/**
+ * Search result item data.
+ */
+private data class SearchItem(
+	val url: String,
+	val title: String,
+	val description: String? = null,
+) {
+	companion object {
+		fun fromJsonObject(elem: JsonElement): SearchItem {
+			if (elem !is JsonObject) {
+				Log.e(
+					"SearchedScreen",
+					"SearchItem.fromJsonObject: Invalid JSON element type"
+				)
+				throw IllegalArgumentException("Expected a JSON object")
+			}
+			val jo = elem
+			val url = jo["url"]?.jsonPrimitive?.content ?: ""
+			val title = jo["title"]?.jsonPrimitive?.content ?: ""
+			val description = jo["description"]?.jsonPrimitive?.content
+			if (url.isBlank() || title.isBlank()) {
+				Log.e(
+					"SearchedScreen",
+					"SearchItem.fromJsonObject: Invalid SearchItem JSON"
+				)
+				throw IllegalArgumentException(
+					"SearchItem must have non-blank url and title"
+				)
+			}
+			return SearchItem(
+				url = url,
+				title = title,
+				description = description
+			)
+		}
+
+		fun fromJsonArray(elem: JsonElement?): List<SearchItem> {
+			if (elem == null || elem !is JsonArray) {
+				Log.e(
+					"SearchedScreen",
+					"SearchItem.fromJsonArray: Invalid JSON element type"
+				)
+				throw IllegalArgumentException("Expected a JSON array")
+			}
+			return elem.toList().map {
+				if (it is JsonObject) {
+					SearchItem.fromJsonObject(it)
+				} else {
+					Log.e(
+						"SearchedScreen",
+						"SearchItem.fromJsonArray: Invalid item in JSON array"
+					)
+					throw IllegalArgumentException("Invalid item in JSON array")
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Load search results from the search script.
+ */
 private suspend fun loadURLsFromSearchScripts(
 	keyword: String,
 	pp: PickerProcess
-): List<String> {
+): List<SearchItem> {
 	Log.i("SearchedScreen", "loadFromScript: Searching for '$keyword' in scripts")
 	val inputs = JsonObject(
 		mapOf(
@@ -47,29 +111,15 @@ private suspend fun loadURLsFromSearchScripts(
 		)
 		return emptyList()
 	} else {
-		val urls =
-			result.finalResult["\$urls"]?.jsonArray?.map { it.jsonPrimitive.content }
-		if (urls != null) {
-			Log.i(
-				"SearchedScreen",
-				"loadFromScript: Found ${urls.size} URLs for search '$keyword'"
-			)
-			return urls
-		} else {
-			Log.w(
-				"SearchedScreen",
-				"loadFromScript: No URLs found for search '$keyword'"
-			)
-			return emptyList()
-		}
+		return SearchItem.fromJsonArray(result.finalResult["\$items"])
 	}
 }
 
 
 private suspend fun loadURLs(
 	searchKeyword: String,
-	onURLFound: (List<String>) -> Unit,
-): List<String> {
+	onURLFound: (List<SearchItem>) -> Unit,
+): List<SearchItem> {
 	Log.i("SearchedScreen", "loadURLs: Searching for '$searchKeyword'")
 	var jobs = mutableListOf<Deferred<Unit>>()
 	for (p in ContentsVM.pickers) {
@@ -90,9 +140,9 @@ private suspend fun loadURLs(
 		// Run the ssearch script in the new coroutine
 		val job = coroutineScope {
 			async {
-				val urls = loadURLsFromSearchScripts(searchKeyword, script)
-				if (urls.isNotEmpty()) {
-					onURLFound(urls)
+				val items = loadURLsFromSearchScripts(searchKeyword, script)
+				if (items.isNotEmpty()) {
+					onURLFound(items)
 				}
 			}
 		}
@@ -111,14 +161,13 @@ private suspend fun loadURLs(
 
 @Composable
 fun SearchedScreen(
-	navCallbacks: NavCallbacks,
 	searchKeyword: String,
 ) {
-	val state = viewModel<ArticlePageState>()
+	val searchItems = remember { mutableStateListOf<SearchItem>() }
 
 	LaunchedEffect(searchKeyword) {
-		loadURLs(searchKeyword) { urls ->
-			state.addURLs(urls)
+		loadURLs(searchKeyword) { items ->
+			searchItems.addAll(items)
 		}
 	}
 
@@ -128,9 +177,7 @@ fun SearchedScreen(
 		topBar = {
 			TopBar(
 				title = "Search: $searchKeyword",
-				onBack = {
-					navCallbacks.onBack()
-				},
+				onBack = true,
 			)
 		},
 		containerColor = LocalCustomColorsPalette.current.background,
@@ -140,20 +187,33 @@ fun SearchedScreen(
 			modifier = Modifier
 				.fillMaxSize(),
 		) {
-			ArticlePager(
+			Column(
 				modifier = Modifier
-					.fillMaxSize(),
-				state,
-				spaceTop = innerPadding.calculateTopPadding(),
-				spaceBottom = innerPadding.calculateBottomPadding(),
-			)
+					.fillMaxSize()
+					.padding(innerPadding)
+					.padding(16.dp),
+			) {
+				for (item in searchItems) {
+					Column {
+						// Display each search item
+						Text(
+							text = item.title,
+						)
+						Text(
+							text = item.description ?: "",
+						)
+						Text(
+							text = item.url,
+						)
+					}
+				}
+			}
 
 			BottomSheet(
 				modifier = Modifier
 					.align(Alignment.BottomCenter)
 					.padding(32.dp),
-				navCallbacks = navCallbacks,
-				state = state,
+				state = null,
 			)
 		}
 	}

@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import lumiknit.app.hwik.NavCallbacks
 import lumiknit.app.hwik.components.TopBar
 import lumiknit.app.hwik.screen.prefs.comp.PrefBool
 import lumiknit.app.hwik.screen.prefs.comp.PrefInt
@@ -18,9 +17,7 @@ import lumiknit.app.hwik.screen.prefs.comp.PrefText
 import lumiknit.app.hwik.ui.theme.LocalCustomColorsPalette
 
 @Composable
-fun PreferencesView(
-	navCallbacks: NavCallbacks
-) {
+fun PreferencesView() {
 	// Preference Screen
 	val context = LocalContext.current
 
@@ -28,9 +25,7 @@ fun PreferencesView(
 		topBar = {
 			TopBar(
 				title = "Preferences",
-				onBack = {
-					navCallbacks.onBack()
-				}
+				onBack = true
 			)
 		},
 		modifier = Modifier

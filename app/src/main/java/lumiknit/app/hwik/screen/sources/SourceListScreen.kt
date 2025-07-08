@@ -30,7 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.R
 import lumiknit.app.hwik.components.MenuItem
 import lumiknit.app.hwik.components.TopBar
@@ -44,9 +44,7 @@ import lumiknit.app.hwik.ui.theme.listItemDescTextStyle
 import lumiknit.app.hwik.ui.theme.listItemTitleTextStyle
 
 @Composable
-fun SourceListScreen(
-	navCallbacks: NavCallbacks,
-) {
+fun SourceListScreen() {
 	val context = LocalContext.current
 	val coroutineScope = rememberCoroutineScope()
 	var db = PSDatabase.getDatabase(context)
@@ -82,9 +80,7 @@ fun SourceListScreen(
 		topBar = {
 			TopBar(
 				title = stringResource(R.string.title_sources),
-				onBack = {
-					navCallbacks.onBack()
-				},
+				onBack = true,
 				menuItems = listOf(
 					MenuItem(title = "Refresh List", onClick = {
 						coroutineScope.launch {
@@ -123,7 +119,7 @@ fun SourceListScreen(
 				// Add button
 				Button(
 					onClick = {
-						navCallbacks.onRouteSourceEdit(null) // Navigate to add source screen
+						Navigator.go(Navigator.RouteSourceEdit(null))
 					}
 				) {
 					Icon(Icons.Default.Add, contentDescription = "Add Source")
@@ -135,7 +131,7 @@ fun SourceListScreen(
 				PSSourceItem(
 					entity = src,
 					onClick = {
-						navCallbacks.onRouteSourceEdit(src.id) // Navigate to edit source screen
+						Navigator.go(Navigator.RouteSourceEdit(src.id))
 					},
 					onDelete = {
 						deleteOrigin(src)

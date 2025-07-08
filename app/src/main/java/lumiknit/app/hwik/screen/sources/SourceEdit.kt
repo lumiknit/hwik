@@ -28,7 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import lumiknit.app.hwik.NavCallbacks
+import lumiknit.app.hwik.Navigator
 import lumiknit.app.hwik.components.list.ListSectionTitle
 import lumiknit.app.hwik.core.PickerProcess
 import lumiknit.app.hwik.core.PickerScript
@@ -40,7 +40,6 @@ fun String.nullIfBlank(): String? {
 
 @Composable
 fun PSEdit(
-	navCallbacks: NavCallbacks,
 	value: PickerScript,
 	onValueChange: (PickerScript) -> Unit,
 ) {
@@ -136,21 +135,18 @@ fun PSEdit(
 	)
 
 	EditProcess(
-		navCallbacks = navCallbacks,
 		name = "Article List",
 		process = value.articleList,
 		onValueChange = { onValueChange(value.copy(articleList = it)) }
 	)
 
 	EditProcess(
-		navCallbacks = navCallbacks,
 		name = "Article Content",
 		process = value.articleContent,
 		onValueChange = { onValueChange(value.copy(articleContent = it)) }
 	)
 
 	EditProcess(
-		navCallbacks = navCallbacks,
 		name = "Search",
 		process = value.search,
 		onValueChange = { onValueChange(value.copy(search = it)) }
@@ -159,7 +155,6 @@ fun PSEdit(
 
 @Composable
 private fun EditProcess(
-	navCallbacks: NavCallbacks,
 	name: String,
 	process: PickerProcess,
 	onValueChange: (PickerProcess) -> Unit,
@@ -170,7 +165,7 @@ private fun EditProcess(
 	Column(
 	) {
 		Button(onClick = {
-			navCallbacks.onRouteSourceTest(process.toJSON())
+			Navigator.go(Navigator.RouteSourceTest(process.toJSON()))
 		}) {
 			Text("Test")
 		}
